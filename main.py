@@ -1,6 +1,6 @@
 from carla import OnlineCatalog, MLModelCatalog
 from carla.recourse_methods import GrowingSpheres
-from .src import Trainer, MyOwnModel
+from src import Trainer, MyOwnModel
 
 
 if __name__ == "__main__":
@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     data_name = "adult"
     dataset = OnlineCatalog(data_name)
-    model = MLModelCatalog(dataset, "ann")
+    model = MLModelCatalog(dataset, "ann", "pytorch")
 
     hyperparameters = {}
     gs = GrowingSpheres(model, hyperparameters)
@@ -21,7 +21,7 @@ if __name__ == "__main__":
                       dataset=dataset)
     
     
-    for step in MAX_STEPS:
+    for step in range(MAX_STEPS):
 
         train_loss = trainer.train_step()
         test_loss = trainer.test_step()
