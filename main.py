@@ -1,92 +1,63 @@
-from carla import OnlineCatalog, MLModelCatalog
-from carla.recourse_methods import GrowingSpheres, Dice
-from src import Trainer, MyOwnModel
-import warnings
-import matplotlib.pyplot as plt 
-import numpy as np
-from tqdm import tqdm
-warnings.filterwarnings("ignore")
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+import torch
+from src.integration.montecarlo import MontecarloEstimator
+from src.models.models import MLP
+from src.trainer.trainer import Trainer
+from torch.utils.data import DataLoader, TensorDataset
+import matplotlib.pyplot as plt
+dtype = torch.float32
 
-if __name__ == "__main__":
+df=pd.read_csv('data/water_potability.csv')
+df['ph'].fillna(value=df['ph'].median(),inplace=True)
+df['Sulfate'].fillna(value=df['Sulfate'].median(),inplace=True)
+df['Trihalomethanes'].fillna(value=df['Trihalomethanes'].median(),inplace=True)
+X = df.drop('Potability',axis=1).values
+y = df['Potability'].values
 
-    # TODO: Add Hydra
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=101)
 
-    MAX_STEPS = 1
+scaler = StandardScaler()
+scaler.fit(X_train)
+X_train = scaler.transform(X_train)
+X_test = scaler.transform(X_test)
 
-    data_name = "compas"
-    dataset = OnlineCatalog(data_name)
-    model = MLModelCatalog(dataset, "ann", "pytorch")
-    model.train(learning_rate=0.01, epochs=0, batch_size=64, force_train=True, hidden_size=[18,21,15,12,9,6,3])
-    distances = []
-    std = []
-    test_loss, test_acc = [], []
-    train_loss, train_acc = [], []
-    steps = 800
-    epochs = [5]*steps
+# Parameters
+input_dim = 9  # e.g., number of features in your input dataset
+hidden_layers = [30, 20, 15, 5]  # e.g., two hidden layers with 50 and 30 neurons respectively
+output_dim = 2  # e.g., number of classes for classification
 
-    for epoch in tqdm(epochs):
+# Create the MLP model
+model = MLP(input_dim, hidden_layers, output_dim)
 
-        print(f"Epochs: {epoch}")
-        t_a, t_l, te_a, te_l = model.continue_training(learning_rate=0.001, epochs=epoch, batch_size=256)
-        test_loss += te_l
-        test_acc += te_a
-        train_acc += t_a
-        train_loss += t_l
-        hyperparameters = {}
-        gs = GrowingSpheres(model, hyperparameters)
-        factuals = dataset.df_train.sample(frac=0.2)
-        counterfactuals = gs.get_counterfactuals(factuals)
-        distance = np.sqrt(((factuals - counterfactuals) ** 2).sum(axis=1))
-        logits = model._model.logit(factuals)
-        distances.append(np.mean(distance))
-        std.append(np.std(distance))
-        print(f"Distance: {np.mean(distance)}| std: {np.std(distance)}")
+# Print the model structure
+print(model)
 
-    fig, axs = plt.subplots(3, 1, figsize=(10, 15))
+# Assuming model, criterion, optimizer have been defined
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model.to(device)
 
-    # Primo asse: Loss di Training e Test
-    axs[0].plot(train_loss, label='Train Loss')
-    axs[0].plot(test_loss, label='Test Loss')
-    axs[0].set_title('Training and Test Loss')
-    axs[0].set_xlabel('Epochs')
-    axs[0].set_ylabel('Loss')
-    axs[0].legend()
+criterion = torch.nn.CrossEntropyLoss()  # For classification tasks
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    # Secondo asse: Accuratezza di Training e Test
-    axs[1].plot(train_acc, label='Train Accuracy')
-    axs[1].plot(test_acc, label='Test Accuracy')
-    axs[1].set_title('Training and Test Accuracy')
-    axs[1].set_xlabel('Epochs')
-    axs[1].set_ylabel('Accuracy')
-    axs[1].legend()
+train_set = TensorDataset(torch.tensor(X_train, dtype=dtype), torch.tensor(y_train,dtype=torch.long))
+test_set = TensorDataset(torch.tensor(X_test, dtype=dtype), torch.tensor(y_test, dtype=torch.long))
 
-    # Terzo asse: Distanza Media e Deviazione Standard
-    axs[2].errorbar(np.linspace(10, 100, steps), distances, yerr=std, label='Average Distance ± STD', fmt='-o')
-    axs[2].set_title('Average Distance with STD')
-    axs[2].set_xlabel('Epochs')
-    axs[2].set_ylabel('Distance')
-    axs[2].legend()
-
-    plt.tight_layout()
-    plt.show()
-    
-
-#    
-#    gs = GrowingSpheres(model, hyperparameters)
-#
-#    trainer = Trainer(model=model,
-#                      cf_model=gs,
-#                      dataset=dataset)
-#    
-#    
-#    for step in range(MAX_STEPS):
-#
-#        train_loss = trainer.train_step()
-#        test_loss = trainer.test_step()
-#
-#        factuals = dataset.df.sample(10)
-#        counterfactuals = gs.get_counterfactuals(factuals)
-#
-        # TODO: Compute distance between factual and counterfactual
+train_loader = DataLoader(train_set, batch_size=128, shuffle=True)
 
 
+test_loader = DataLoader(test_set, batch_size=10)
+
+# Initialize Trainer
+trainer = Trainer(model, criterion, optimizer, device)
+
+trainer.train(train_loader, test_loader, train_set, epochs=1000)
+
+plt.plot(trainer.p_x, label="P_x")
+plt.plot(trainer.train_acc_history, label="Train Acc")
+plt.plot(trainer.train_loss_history, label="Train Loss")
+
+
+plt.legend()
+plt.show()

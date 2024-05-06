@@ -1,2 +1,2 @@
 from .trainer import Trainer
-from .models import MyOwnModel
+from .models import MLP

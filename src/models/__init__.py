@@ -1,1 +1,1 @@
-from .models import MyOwnModel
+from .models import MLP

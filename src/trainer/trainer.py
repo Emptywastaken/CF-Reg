@@ -1,55 +1,81 @@
-from torch import nn
 import torch
-from carla.recourse_methods import RecourseMethod
-from carla import MLModel
+
+from src.integration.montecarlo import MontecarloEstimator
 
 class Trainer:
-
-    def __init__(self, 
-                 model: MLModel, 
-                 cf_model: RecourseMethod, 
-                 dataset, 
-                 optimizer:str="sgd", 
-                 loss:str="bce")->None:
-        
+    def __init__(self, model, criterion, optimizer, device):
         self.model = model
-        self.cf_model = cf_model
-        self.dataset = dataset
-        self.optimizer = self._get_optimizer(optimizer)
-        self.loss_fn = self._get_loss(loss)
+        self.criterion = criterion
+        self.optimizer = optimizer
+        self.device = device
+        self.train_loss_history = []
+        self.train_acc_history = []
+        self.test_loss_history = []
+        self.test_acc_history = []
+        self.p_x = []
+        self.std = []
 
-    def train_step(self):
+    def train_one_epoch(self, data_loader, m_e):
+        total_loss = 0
+        correct = 0
+        total = 0
+        for data, target in data_loader:
+            data, target = data.to(self.device), target.to(self.device)
 
-        # TODO: implements batch training
-        # TODO: implement accuracy 
+            # Forward pass
+            output = self.model(data)
+            loss = self.criterion(output, target)
 
-        for sample in self.dataset:
-                    
+            # Backward and optimize
             self.optimizer.zero_grad()
-            output = self.model(input)
-            loss = self.loss_fn(output, target)
             loss.backward()
-            return loss
+            self.optimizer.step()
 
-    def test_step(self):
+            total_loss += loss.item() * data.size(0)
+            _, predicted = torch.max(output.data, 1)
+            total += target.size(0)
+            correct += (predicted == target).sum().item()
 
-        # TODO: implements batch training
-        # TODO: implement accuracy 
+        epoch_loss = total_loss / total
+        epoch_accuracy = correct / total
+        X, y = next(iter(data_loader))
 
-        pass
+        mean, std = m_e.compute(sample=torch.tensor(X, device="cuda"), target=torch.tensor(y, device="cuda"))
 
-    def _get_optimizer(self, 
-                       model:nn.Module, 
-                       optimizer:str)->torch.optim.Optimizer:
-        
-        if optimizer == "adam":
-            return torch.optim.Adam(model.parameters(), lr=0.001)
-        elif optimizer == "sgd":
-            return torch.optim.SGD(model.parameters(), lr=0.001)
-        
-    def _get_loss(self, 
-                  loss:str)->torch.nn.Module:
+        return epoch_loss, epoch_accuracy, mean, std
 
-        if loss == "bce":
+    def train(self, train_loader, test_loader, train_set, epochs):
+        self.model.train()
 
-            return torch.nn.BCELoss()
+        m_e = MontecarloEstimator(self.model, train_set, n_samples=1000)
+
+        for epoch in range(epochs):
+            epoch_loss, epoch_accuracy, p_x, std = self.train_one_epoch(train_loader, m_e)
+            self.train_loss_history.append(epoch_loss)
+            self.train_acc_history.append(epoch_accuracy)
+            self.p_x.append(p_x)
+            self.std.append(std)
+
+            # Test the model after each training epoch
+            test_loss, test_accuracy = self.test(test_loader)
+            self.test_loss_history.append(test_loss)
+            self.test_acc_history.append(test_accuracy)
+            print(f'Epoch {epoch+1}, Train Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, p_x: {p_x:.4f}, std: {std:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
+
+    def test(self, data_loader):
+        self.model.eval()
+        total_loss = 0
+        correct = 0
+        total = 0
+        with torch.no_grad():
+            for data, target in data_loader:
+                data, target = data.to(self.device), target.to(self.device)
+                output = self.model(data)
+                loss = self.criterion(output, target)
+                total_loss += loss.item() * data.size(0)
+                _, predicted = torch.max(output.data, 1)
+                total += target.size(0)
+                correct += (predicted == target).sum().item()
+        epoch_loss = total_loss / total
+        epoch_accuracy = correct / total
+        return epoch_loss, epoch_accuracy

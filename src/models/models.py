@@ -1,29 +1,26 @@
-from carla import MLModel
+import torch
+from torch import nn
+import torch.nn.functional as F
 
-class MyOwnModel(MLModel):
-    def __init__(self, data):
-        super().__init__(data)
+class MLP(nn.Module):
+    def __init__(self, input_dim, hidden_layers, output_dim):
+        super(MLP, self).__init__()
+        self.layers = nn.ModuleList()
+        
+        # Create the first layer from the input dimension to the first hidden layer size
+        current_dim = input_dim
+        for hidden_dim in hidden_layers:
+            self.layers.append(nn.Linear(current_dim, hidden_dim))
+            current_dim = hidden_dim
+        
+        # Output layer
+        self.layers.append(nn.Linear(current_dim, output_dim))
+    
+    def forward(self, x):
+        # Apply a ReLU activation function to each hidden layer
+        for layer in self.layers[:-1]:
+            x = F.relu(layer(x))
+        # No activation function for the output layer (assuming classification task)
+        x = self.layers[-1](x)
+        return x
 
-        self._mymodel = None
-
-    @property
-    def feature_input_order(self):
-        return [...]
-
-    @property
-    def backend(self):
-        return "pytorch"
-
-    @property
-    def raw_model(self):
-        return self._mymodel
-
-     # The predict function outputs
-     # the continuous prediction of the model
-    def predict(self, x):
-        return self._mymodel.predict(x)
-
-     # The predict_proba method outputs
-     # the prediction as class probabilities
-    def predict_proba(self, x):
-        return self._mymodel.predict_proba(x)
