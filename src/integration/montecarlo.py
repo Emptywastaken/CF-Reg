@@ -5,6 +5,7 @@ import torch
 import numpy as np
 from torch.utils.data import TensorDataset
 import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 class MontecarloEstimator():
 
@@ -19,72 +20,24 @@ class MontecarloEstimator():
         self.include_volume = True
 
     def compute(self, classifier_out):
-        pca = False
-        p_x_list = []
-
-        for i in range(len(self.random_index.tolist())):
-
-            sample_perturbed = self.X[i].to("cuda") + self.perturbation
-            out = self.function(sample_perturbed)
-            out = torch.argmax(out, dim=1)
-            mask = (out != classifier_out[i].repeat(self.n_samples).to("cuda")).cpu()
-
-            if torch.sum(mask) != self.n_samples and torch.sum(mask) != 0:
-                pca = False
-            if pca:
-                x_pca = self.pca(torch.cat([sample_perturbed, self.X[i].unsqueeze(0).to("cuda")]), n_components=3).cpu()
-                self.plot_pca(x_pca, mask)
-                pca=False
-
-            average_function_value = torch.sum(out != classifier_out[i].repeat(self.n_samples).to("cuda"))/torch.numel(out)
-            value = self.volume * average_function_value if self.include_volume else average_function_value
-            p_x_list.append(value)
+        """
+        Perturbation must be of dimension 100, 500, 5 namely P, S, F
+        Where P is the number of perturbation
+        S is the number of sample
+        F is the number of features
+        Sample must be of dimensio S, F
+        """ 
+        sample_perturbed = self.X.to("cuda") + self.perturbation.unsqueeze(1).repeat(1, self.X.shape[0], 1)
+        out = self.function(sample_perturbed)
+        out = torch.argmax(out, dim=-1)
+        classifier_out = classifier_out[self.random_index]
+        classifier_out = classifier_out.unsqueeze(1)
+        classifier_out = classifier_out.repeat(1, self.n_samples)
+        classifier_out = classifier_out.to("cuda")
+        classifier_out = classifier_out.permute(1, 0)
+        different = out != classifier_out
+        average_function_value = torch.sum(different, dim=0)/different.shape[0]
+        value = self.volume * average_function_value if self.include_volume else average_function_value
         
-        return torch.mean(torch.tensor(p_x_list)), torch.std(torch.tensor(p_x_list))
-    
-
-    def pca(self, X, n_components: int =2):
         
-        # 1. Standardize the data
-        X_mean = torch.mean(X, 0)
-        X_std = torch.std(X, 0)
-        X = (X - X_mean) / X_std
-
-        # 2. Calculate the covariance matrix
-        X_t = X.t()
-        covariance_matrix = X_t @ X / (X.size(0) - 1)
-
-        # 3. Compute eigenvalues and eigenvectors
-        eigenvalues, eigenvectors = torch.linalg.eigh(covariance_matrix)
-
-        # 4. Sort eigenvalues and eigenvectors
-        sorted_indices = torch.argsort(eigenvalues, descending=True)
-        eigenvalues = eigenvalues[sorted_indices]
-        eigenvectors = eigenvectors[:, sorted_indices]
-
-        # 5. Select the top n_components eigenvectors (n_components <= number of features)
-        components = eigenvectors[:, :n_components]
-
-        # 6. Transform the original matrix
-        X_pca = X @ components
-
-        return X_pca
-    
-    def plot_pca(x_pca, mask):
-
-        x_pca = x_pca[:-1, :]
-        original_sample = x_pca[-1, :]
-        fig = plt.figure()
-        ax = fig.add_subplot(111, projection='3d')
-        # Scatter plot
-        ax.scatter(x_pca[mask, 0], x_pca[mask, 1], x_pca[mask, 2], c="blue", label="Counterfactual", marker="*")
-        ax.scatter(x_pca[~mask, 0], x_pca[~mask, 1], x_pca[~mask, 2], c="red", label="Factual")
-        ax.scatter(original_sample[0], original_sample[1], original_sample[2], c="green", s=50, label="Original Sample")
-        # Setting labels
-        ax.set_xlabel('X Coordinate')
-        ax.set_ylabel('Y Coordinate')
-        ax.set_zlabel('Z Coordinate')
-        ax.set_title(f'Random Points Inside a 3D Sphere')
-        plt.legend()
-        # Show the plot
-        plt.show()
+        return torch.mean(value).cpu(), torch.std(value).cpu()

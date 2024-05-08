@@ -2,12 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math 
 import torch
+from scipy.special import gamma
 
 def hypersphere_volume(dimensions: int, radius: float) -> float:
 
     pi_pow = np.pi**(dimensions/2)
     euler_argument = (dimensions/2) + 1
-    euler_value = math.gamma(euler_argument)
+    euler_value = gamma(euler_argument)
     result = (pi_pow/euler_value)*(radius**dimensions)
 
     return result

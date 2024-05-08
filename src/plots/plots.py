@@ -2,7 +2,9 @@ import matplotlib.pylab as plt
 
 
 def plot_metrics(train_acc, test_acc, train_loss, test_loss, volume, volume_std):
-    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
+    import numpy as np
+
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(21, 7))
 
     epochs = [i for i in range(len(train_acc))]
 
@@ -26,14 +28,36 @@ def plot_metrics(train_acc, test_acc, train_loss, test_loss, volume, volume_std)
     ax2.grid(True)
     ax2.set_ylim([-0.1, 2.5])
 
+    
     # Plotting volume on the right subplot
-    ax3.errorbar(epochs, volume, label='Volume', yerr=volume_std, color='green')
+    ax3.plot(epochs, volume, label='Volume',  color='green')
+    ax3.fill_between(epochs, np.array(volume) - np.array(volume_std), np.array(volume) + np.array(volume_std), color='green', alpha=0.2)
     ax3.set_title('Volume Over Epochs')
     ax3.set_xlabel('Epochs')
     ax3.set_ylabel('Volume')
     ax3.legend()
     ax3.grid(True)
-    ax3.set_ylim([-5, 130])
+    ax3.set_ylim([-2, 3.8])
 
     plt.tight_layout()
+    plt.show()
+
+
+def plot_pca(x_pca, mask):
+    
+    x_pca = x_pca[:-1, :]
+    original_sample = x_pca[-1, :]
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    # Scatter plot
+    ax.scatter(x_pca[mask, 0], x_pca[mask, 1], x_pca[mask, 2], c="blue", label="Counterfactual", marker="*")
+    ax.scatter(x_pca[~mask, 0], x_pca[~mask, 1], x_pca[~mask, 2], c="red", label="Factual")
+    ax.scatter(original_sample[0], original_sample[1], original_sample[2], c="green", s=50, label="Original Sample")
+    # Setting labels
+    ax.set_xlabel('X Coordinate')
+    ax.set_ylabel('Y Coordinate')
+    ax.set_zlabel('Z Coordinate')
+    ax.set_title(f'Random Points Inside a 3D Sphere')
+    plt.legend()
+    # Show the plot
     plt.show()
