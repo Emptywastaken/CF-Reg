@@ -27,13 +27,13 @@ trainset, testset = get_dataset(name="water")
 
 # Parameters
 input_dim = trainset.tensors[0].shape[1]
-hidden_layers = [30, 20, 15, 5]
+hidden_layers = [30, 20, 5]
 out_classes = 2
 
 model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
 
 criterion = torch.nn.CrossEntropyLoss()  # For classification tasks
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
 
 train_loader = DataLoader(trainset, batch_size=128, shuffle=True)
 test_loader = DataLoader(testset, batch_size=10)

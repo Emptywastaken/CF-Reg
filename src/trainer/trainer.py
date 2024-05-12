@@ -46,7 +46,7 @@ class Trainer:
     def train(self, train_loader, test_loader, train_set, epochs):
 
         self.model.train()
-        m_e = MontecarloEstimator(self.model, train_set, n_samples=1000, radius=1)
+        m_e = MontecarloEstimator(self.model, train_set, n_samples=1000, radius=0.5)
 
         for epoch in range(epochs):
             epoch_loss, epoch_accuracy, p_x, std = self.train_one_epoch(train_loader, m_e)
