@@ -3,10 +3,11 @@ import torch
 
 class CounterfactualRegularizationLoss(Module):
     
-    def __init__(self) -> None:
+    def __init__(self, alpha: float = 0.5) -> None:
         
         self.train_loss = torch.nn.CrossEntropyLoss()
         self.counterfactual_loss = torch.nn.CrossEntropyLoss()
+        self.alpha = alpha
     
     def forward(self, out, target, out_cf, target_cf):
         """

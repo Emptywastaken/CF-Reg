@@ -6,6 +6,7 @@ import numpy as np
 from typing import List, Tuple
 from src.utility.dataset import get_dataset
 from src.utility.models import get_model
+from src.utility.loss import get_loss
 import wandb
 from src.sweep_configs.sweeps import sweep_configuration
 
@@ -35,12 +36,12 @@ def main():
 
     # Parameters
     input_dim = trainset.tensors[0].shape[1]
-    hidden_layers = [30, 20, 5]
+    hidden_layers = wandb.config.hidden_layers
     out_classes = 2
 
     model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
 
-    criterion = torch.nn.CrossEntropyLoss()  # For classification tasks
+    criterion = get_loss(name=wandb.config.losses)
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr)
 
     train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)
