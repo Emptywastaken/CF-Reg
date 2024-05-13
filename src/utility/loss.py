@@ -6,11 +6,11 @@ def get_loss(name: str) -> Module:
     
     if name == "regularized":
         
-        return CounterfactualRegularizationLoss()
+        return CounterfactualRegularizationLoss
     
     elif name == "normal":
         
-        return  torch.nn.CrossEntropyLoss()
+        return  torch.nn.CrossEntropyLoss
     
     else:
         

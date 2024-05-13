@@ -9,11 +9,13 @@ from src.utility.models import get_model
 from src.utility.loss import get_loss
 import wandb
 from src.sweep_configs.sweeps import sweep_configuration
+import os
 
+os.environ["WANDB_DISABLED"] = "true"
 
 def main():
-    
-    wandb.init(project="counterfactual_overfitting")
+
+    wandb.init(mode="disabled")
 
     
     seed = 42
@@ -41,7 +43,7 @@ def main():
 
     model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
 
-    criterion = get_loss(name=wandb.config.losses)
+    criterion = get_loss(name=wandb.config.losses)(alpha=0.3)
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr)
 
     train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)
