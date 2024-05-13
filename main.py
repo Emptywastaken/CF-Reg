@@ -6,46 +6,58 @@ import numpy as np
 from typing import List, Tuple
 from src.utility.dataset import get_dataset
 from src.utility.models import get_model
-
-seed = 42
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-np.random.seed(seed)  # Setting seed for NumPy's RNG
-torch.manual_seed(seed)
-
-# Additional steps to enforce determinism
-# Note: These settings can degrade performance and may not guarantee complete reproducibility across different PyTorch releases or different platforms like CPUs and GPUs.
-
-# Ensuring that all operations are deterministic on GPU (if using CUDA)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed(seed)
-    torch.cuda.manual_seed_all(seed)  # for multi-GPU.
-    torch.backends.cudnn.deterministic = True
-    torch.backends.cudnn.benchmark = False
+import wandb
+from src.sweep_configs.sweeps import sweep_configuration
 
 
-trainset, testset = get_dataset(name="water")
+def main():
+    
+    wandb.init(project="counterfactual_overfitting")
 
-# Parameters
-input_dim = trainset.tensors[0].shape[1]
-hidden_layers = [30, 20, 5]
-out_classes = 2
+    
+    seed = 42
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    np.random.seed(seed)  # Setting seed for NumPy's RNG
+    torch.manual_seed(seed)
 
-model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
+    # Additional steps to enforce determinism
+    # Note: These settings can degrade performance and may not guarantee complete reproducibility across different PyTorch releases or different platforms like CPUs and GPUs.
 
-criterion = torch.nn.CrossEntropyLoss()  # For classification tasks
-optimizer = torch.optim.Adam(model.parameters(), lr=0.0002)
-
-train_loader = DataLoader(trainset, batch_size=128, shuffle=True)
-test_loader = DataLoader(testset, batch_size=10)
-
-# Initialize Trainer
-trainer = Trainer(model, criterion, optimizer, device)
-trainer.train(train_loader, test_loader, trainset, epochs=500)
+    # Ensuring that all operations are deterministic on GPU (if using CUDA)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)  # for multi-GPU.
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
 
 
-plot_metrics(train_acc=trainer.train_acc_history,
-             test_acc=trainer.test_acc_history,
-             test_loss=trainer.test_loss_history,
-             train_loss=trainer.train_loss_history,
-             volume=trainer.p_x,
-             volume_std=trainer.std)
+    trainset, testset = get_dataset(name="water")
+
+    # Parameters
+    input_dim = trainset.tensors[0].shape[1]
+    hidden_layers = [30, 20, 5]
+    out_classes = 2
+
+    model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
+
+    criterion = torch.nn.CrossEntropyLoss()  # For classification tasks
+    optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr)
+
+    train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)
+    test_loader = DataLoader(testset, batch_size=10)
+
+    # Initialize Trainer
+    trainer = Trainer(model, criterion, optimizer, device)
+    trainer.train(train_loader, test_loader, trainset, epochs=wandb.config.epochs, wandb=wandb)
+
+
+sweep_id = wandb.sweep(sweep=sweep_configuration, project='counterfactual_overfitting')
+
+wandb.agent(sweep_id, function=main)
+
+    # plot_metrics(train_acc=trainer.train_acc_history,
+    #             test_acc=trainer.test_acc_history,
+    #             test_loss=trainer.test_loss_history,
+    #             train_loss=trainer.train_loss_history,
+    #             volume=trainer.p_x,
+    #             volume_std=trainer.std)
