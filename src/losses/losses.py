@@ -21,4 +21,4 @@ class CounterfactualRegularizationLoss(Module):
         train_loss = self.train_loss(out, target)
         counterfactual_loss = self.counterfactual_loss(out_cf, target_cf)
         
-        return train_loss + counterfactual_loss
+        return train_loss + self.alpha * counterfactual_loss

@@ -4,6 +4,7 @@ from torch.utils.data import DataLoader, TensorDataset
 from src.plots.plots import plot_metrics
 import numpy as np
 from typing import List, Tuple
+from src.trainer.trainer_regularized import RegularizedTrainer
 from src.utility.dataset import get_dataset
 from src.utility.models import get_model
 from src.utility.loss import get_loss
@@ -11,12 +12,11 @@ import wandb
 from src.sweep_configs.sweeps import sweep_configuration
 import os
 
-os.environ["WANDB_DISABLED"] = "true"
 
 def main():
 
-    wandb.init(mode="disabled")
-
+    wandb.init(project="counterfactual_overfitting")
+    #wandb.init(mode="disabled")
     
     seed = 42
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -38,19 +38,20 @@ def main():
 
     # Parameters
     input_dim = trainset.tensors[0].shape[1]
-    hidden_layers = wandb.config.hidden_layers
+    #hidden_layers = wandb.config.hidden_layers
+    hidden_layers = [30, 20, 5]
     out_classes = 2
 
     model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
 
-    criterion = get_loss(name=wandb.config.losses)(alpha=0.3)
+    criterion = get_loss(name="regularized", alpha=wandb.config.alpha)
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr)
 
     train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)
     test_loader = DataLoader(testset, batch_size=10)
 
     # Initialize Trainer
-    trainer = Trainer(model, criterion, optimizer, device)
+    trainer = RegularizedTrainer(model, criterion, optimizer, device)
     trainer.train(train_loader, test_loader, trainset, epochs=wandb.config.epochs, wandb=wandb)
 
 

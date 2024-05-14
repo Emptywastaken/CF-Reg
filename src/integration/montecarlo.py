@@ -41,3 +41,26 @@ class MontecarloEstimator():
         
         
         return torch.mean(value).cpu(), torch.std(value).cpu()
+    
+    def counterfactual(self, X, target):
+        """
+        Perturbation must be of dimension 100, 500, 5 namely P, S, F
+        Where P is the number of perturbation
+        S is the number of sample
+        F is the number of features
+        Sample must be of dimensio S, F
+        """ 
+        sample_perturbed = X.to("cuda") + self.perturbation.unsqueeze(1).repeat(1, X.shape[0], 1)
+        out = self.function(sample_perturbed)
+        #out = torch.argmax(out, dim=-1)
+        out = out.reshape((out.shape[0] * out.shape[1], 2))
+        #classifier_out = classifier_out[self.random_index]
+        target = torch.argmax(target, dim=-1)
+        target = target.unsqueeze(1)
+        target = target.repeat(1, self.n_samples)
+        target = target.reshape(out.shape[0])
+        target = target.to("cuda")
+        
+        
+        return out, target
+      
