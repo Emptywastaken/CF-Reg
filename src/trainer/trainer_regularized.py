@@ -46,7 +46,7 @@ class RegularizedTrainer:
     def train(self, train_loader, test_loader, train_set, epochs, wandb):
 
         self.model.train()
-        m_e = MontecarloEstimator(self.model, train_set, n_samples=1000, radius=0.5)
+        m_e = MontecarloEstimator(self.model, train_set, n_samples=wandb.config.samples, radius=wandb.config.radius)
 
         for epoch in range(epochs):
             
@@ -58,7 +58,7 @@ class RegularizedTrainer:
             self.test_loss_history.append(test_loss)
             self.test_acc_history.append(test_accuracy)
             print(f'Epoch {epoch+1}, Train Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, Total volume: {m_e.volume:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
-            wandb.log({"train_loss": epoch_loss, "test_loss": test_loss, "train_acc": epoch_accuracy, "test_acc": test_accuracy, "delta_loss": {torch.abs(epoch_loss - test_loss)}})
+            wandb.log({"train_loss": epoch_loss, "test_loss": test_loss, "train_acc": epoch_accuracy, "test_acc": test_accuracy, "delta_loss": {abs(epoch_loss - test_loss)}})
             
             
     def test(self, data_loader, m_e: MontecarloEstimator):

@@ -20,13 +20,9 @@ def main():
     
     seed = 42
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    
     np.random.seed(seed)  # Setting seed for NumPy's RNG
     torch.manual_seed(seed)
-
-    # Additional steps to enforce determinism
-    # Note: These settings can degrade performance and may not guarantee complete reproducibility across different PyTorch releases or different platforms like CPUs and GPUs.
-
-    # Ensuring that all operations are deterministic on GPU (if using CUDA)
     if torch.cuda.is_available():
         torch.cuda.manual_seed(seed)
         torch.cuda.manual_seed_all(seed)  # for multi-GPU.
@@ -43,8 +39,8 @@ def main():
     out_classes = 2
 
     model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
-
     criterion = get_loss(name="regularized", alpha=wandb.config.alpha)
+    
     optimizer = torch.optim.Adam(model.parameters(), lr=wandb.config.lr)
 
     train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)

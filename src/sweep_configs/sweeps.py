@@ -1,7 +1,7 @@
 sweep_configuration = {
     "method": "bayes",
     "name": "counterfactual_overfitting",
-    "metric": {"goal": "maximize", "name": "test_acc"},
+    "metric": {"goal": "minimize", "name": "delta_loss"},
     "parameters": {
         "batch_size": {"values": [16, 32, 64, 128, 256]},
         "epochs": {"values": [500, 1000, 1500]},
