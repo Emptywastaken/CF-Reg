@@ -13,3 +13,13 @@ sweep_configuration = {
         "alpha": {"min": 0.01, "max": 1.0}
     },
 }
+
+
+nosweep = {
+    "batch_size": 16,
+    "epochs": 500,
+    "lr": 0.0001,
+    "radius":  1.5,
+    "samples": 100,
+    "alpha": 0.01,
+}

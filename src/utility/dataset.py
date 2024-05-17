@@ -40,8 +40,33 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
         test_set = TensorDataset(torch.tensor(X_test, dtype=dtype), torch.tensor(y_test, dtype=torch.long))
         
         return train_set, test_set
+    
+    elif name == "mnist":
+        from torch.utils.data import Dataset
+        from torchvision import datasets
+        from torchvision import transforms
+        
+        training_data =   datasets.MNIST("data", train=True, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ]))
+
+        test_data = datasets.MNIST('data', train=False, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ]))
+        return training_data, test_data
         
     else:
         raise ValueError(f"Dataset {name} is not available!")
             
     
+    
+if __name__ == "__main__":
+    
+    
+    train, test = get_dataset(name="mnist")

@@ -14,6 +14,8 @@ class MontecarloEstimator():
         self.function = function.eval()
         self.n_samples = n_samples
         self.perturbation = random_points_in_n_sphere(num_points=n_samples, n=9, radius=radius)
+        # TODO: modifica il nmodo in cui vengono generate le perturbazioni
+        # TODO: rendi parametrico il number di sample che devono essere presi nel testset
         self.random_index = torch.randint(len(train_set), (int(len(train_set)*0.8),))
         self.X, _ = train_set[self.random_index]  
         self.volume = hypersphere_volume(dimensions=9, radius=radius)
