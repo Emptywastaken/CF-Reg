@@ -16,10 +16,10 @@ sweep_configuration = {
 
 
 nosweep = {
-    "batch_size": 16,
+    "batch_size": 64,
     "epochs": 500,
     "lr": 0.0001,
     "radius":  1.5,
     "samples": 100,
-    "alpha": 0.01,
+    "alpha": 0.1,
 }

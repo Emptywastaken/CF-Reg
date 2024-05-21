@@ -28,20 +28,20 @@ def main():
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-    trainset, testset = get_dataset(name="mnist")
+    trainset, testset = get_dataset(name="water")
     
-    #input_dim = trainset.tensors[0].shape[1] # TODO: Rendi questo generico
+    input_dim = trainset.tensors[0].shape[1] # TODO: Rendi questo generico
     hidden_layers = [30, 20, 5]
     out_classes = 2
 
-    model = get_model(type="CNN", input_dim=2, hidden_layers=hidden_layers, out_classes=out_classes)
-    criterion = get_loss(name="regularized", alpha=wandb.config.alpha)
-    optimizer = get_optimizer(name="adam", params=model.parameters(), lr=wandb.config.lr)
+    model = get_model(type="MLP", input_dim=input_dim, hidden_layers=hidden_layers, out_classes=out_classes)
+    criterion = get_loss(name="normal", alpha=wandb.config.alpha)
+    optimizer = get_optimizer(name="adam", params=model.parameters(), lr=wandb.config.lr, l2=0.1)
 
     train_loader = DataLoader(trainset, batch_size=wandb.config.batch_size, shuffle=True)
     test_loader = DataLoader(testset, batch_size=wandb.config.batch_size)
 
-    trainer = get_trainer(type="regularized")(model=model, criterion=criterion, optimizer=optimizer, device=device)
+    trainer = get_trainer(type="normal")(model=model, criterion=criterion, optimizer=optimizer, device=device)
 
     trainer.train(train_loader, test_loader, trainset, epochs=wandb.config.epochs, wandb=wandb)
 

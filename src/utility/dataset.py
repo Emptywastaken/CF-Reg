@@ -59,7 +59,11 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
                                transforms.Normalize(
                                  (0.1307,), (0.3081,))
                              ]))
-        return training_data, test_data
+        
+        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
+        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+
+        return train_set, test_set
         
     else:
         raise ValueError(f"Dataset {name} is not available!")

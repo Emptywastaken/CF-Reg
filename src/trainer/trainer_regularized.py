@@ -24,7 +24,7 @@ class RegularizedTrainer:
 
             # Forward pass
             output = self.model(data)
-            out, target_cf = m_e.counterfactual(data, output)
+            out, target_cf = m_e.get_counterfactual(data, output)
             loss = self.criterion(output, target, out, target_cf)
 
             # Backward and optimize
@@ -72,7 +72,7 @@ class RegularizedTrainer:
                 
                 data, target = data.to(self.device), target.to(self.device)
                 output = self.model(data)
-                out, target_cf = m_e.counterfactual(data, output)
+                out, target_cf = m_e.get_counterfactual(data, output)
                 loss = self.criterion(output, target, out, target_cf)
                 total_loss += loss.item() * data.size(0)
                 _, predicted = torch.max(output.data, 1)

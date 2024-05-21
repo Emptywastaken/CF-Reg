@@ -39,27 +39,24 @@ class Trainer:
 
         epoch_loss = total_loss / total
         epoch_accuracy = correct / total
-        mean, std = m_e.compute(torch.cat(classifier_out))
 
-        return epoch_loss, epoch_accuracy, mean, std
-
+        return epoch_loss, epoch_accuracy
+    
     def train(self, train_loader, test_loader, train_set, epochs, wandb):
 
         self.model.train()
-        m_e = MontecarloEstimator(self.model, train_set, n_samples=wandb.config.samples, radius=wandb.config.radius)
 
         for epoch in range(epochs):
-            epoch_loss, epoch_accuracy, p_x, std = self.train_one_epoch(train_loader, m_e)
+            epoch_loss, epoch_accuracy = self.train_one_epoch(train_loader, None)
             self.train_loss_history.append(epoch_loss)
             self.train_acc_history.append(epoch_accuracy)
-            self.p_x.append(p_x)
-            self.std.append(std)
+
             # Test the model after each training epoch
             test_loss, test_accuracy = self.test(test_loader)
             self.test_loss_history.append(test_loss)
             self.test_acc_history.append(test_accuracy)
-            print(f'Epoch {epoch+1}, Train Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, Total volume: {m_e.volume:.4f}, p_x: {p_x:.4f}, std: {std:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
-            wandb.log({"train_loss": epoch_loss, "test_loss": test_loss, "train_acc": epoch_accuracy, "test_acc": test_accuracy, "p_x": p_x, "p_x_std":std})
+            print(f'Epoch {epoch+1}, Train Loss: {epoch_loss:.4f}, Accuracy: {epoch_accuracy:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
+            wandb.log({"train_loss": epoch_loss, "test_loss": test_loss, "train_acc": epoch_accuracy, "test_acc": test_accuracy})
             
             
     def test(self, data_loader):
