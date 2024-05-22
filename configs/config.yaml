@@ -1,17 +1,13 @@
 defaults:
-  #- model: autoencoder
+  - _self_
   - logger: wandb
-  #- callbacks: default_callbacks
-  #- env: default_env
   - data: water
-  #- trainer: default_trainer
+  - trainer: trainer_default
 
 project: counterfactual_overfitting
-name: simple-auto-encoder
+name: experiments
 version: 1
 seed: 42
 device: cuda
-
-# hydra:
-#   run:
-#     dir: ${env.save_dir}
+model_type: MLP
+loss_type: dyn_regularized

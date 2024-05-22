@@ -22,9 +22,9 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
             
             raise ValueError(f"Water dataset is not inside the data folder! cwd {os.getcwd()}")
         
-        df['ph'].fillna(value=df['ph'].median(),inplace=True)
-        df['Sulfate'].fillna(value=df['Sulfate'].median(),inplace=True)
-        df['Trihalomethanes'].fillna(value=df['Trihalomethanes'].median(),inplace=True)
+        df['ph'] = df['ph'].fillna(value=df['ph'].median())
+        df['Sulfate'] = df['Sulfate'].fillna(value=df['Sulfate'].median())
+        df['Trihalomethanes'] = df['Trihalomethanes'].fillna(value=df['Trihalomethanes'].median())
         
         X = df.drop('Potability',axis=1).values
         y = df['Potability'].values

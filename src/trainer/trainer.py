@@ -106,7 +106,7 @@ class CounterfactualLightningClassifier(L.LightningModule):
         
     def configure_optimizers(self):
         
-        return get_optimizer(self.config.optimizer, self.model.parameters(), self.config.lr, l2=self.config.l2)
+        return get_optimizer("adam", self.model.parameters(), self.config.lr, l2=0.0)
         
         
     def on_train_epoch_start(self) -> None:

@@ -1,6 +1,6 @@
 def get_trainer(type: str, model, criterion, evaluator, config,  estimator = None):
     
-    if type == "regularized":
+    if "regularized" in type:
         from src.trainer.trainer import CounterfactualLightningClassifier
 
         return CounterfactualLightningClassifier(model=model,

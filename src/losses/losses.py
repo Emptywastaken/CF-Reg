@@ -23,4 +23,24 @@ class CounterfactualRegularizationLoss(Module):
         
         return train_loss + self.alpha * counterfactual_loss
     
+class DynamicCounterfactualRegularizationLoss(Module):
     
+    def __init__(self) -> None:
+        super().__init__()
+        
+        self.train_loss = torch.nn.CrossEntropyLoss()
+        self.counterfactual_loss = torch.nn.CrossEntropyLoss()
+    
+    def forward(self, out: torch.tensor, target: torch.tensor, out_cf: torch.tensor, target_cf: torch.tensor):
+        """
+        out dimension: N, C
+        target dimension: N
+        out_cf dimension: N, S, C
+        target_cf: N, S, C
+        
+        """
+        train_loss = self.train_loss(out, target)
+        counterfactual_loss = self.counterfactual_loss(out_cf, target_cf)
+        predicted_class_cf = torch.argmax(out_cf, dim=1)
+        alpha = (target_cf != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
+        return train_loss + alpha * counterfactual_loss
