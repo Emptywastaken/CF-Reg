@@ -1,10 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import math 
 import torch
-
-from typing import Tuple
-
+from typing import Tuple, TypeAlias
+npArray: TypeAlias = np.array
+Tensor: TypeAlias = torch.Tensor
 
 class Sphere:
     
@@ -24,7 +23,7 @@ class Sphere:
     def random_points_in_sphere(num_points: int, 
                                   shape: Tuple[int, ...], 
                                   radius: float = 1.0, 
-                                  device: str = "cuda") -> torch.Tensor:
+                                  device: str = "cuda") -> Tensor:
         """
         Generate random points inside an n-dimensional sphere of given radius with uniform distribution.
 
@@ -35,16 +34,16 @@ class Sphere:
         - device (str): Device used (cuda or cpu)
 
         Returns:
-        - torch.Tensor: A tensor of shape (num_points, *shape) containing the generated points.
+        - Tensor: A tensor of shape (num_points, *shape) containing the generated points.
         """
-        total_dim = np.prod(shape)
-        points = 2 * np.random.rand(num_points, total_dim) - 1
-        norms = np.linalg.norm(points, axis=1, keepdims=True)
-        points = points / norms
-        scales = 2 * np.random.rand(num_points, 1) - 1
-        points = points * scales
+        total_dim: npArray = np.prod(shape)
+        points: npArray = 2 * np.random.rand(num_points, total_dim) - 1
+        norms: npArray = np.linalg.norm(points, axis=1, keepdims=True)
+        points: npArray = points / norms
+        scales: npArray = 2 * np.random.rand(num_points, 1) - 1
+        points: npArray = points * scales
         points *= radius
-        points = points.reshape(num_points, *shape)
+        points: npArray = points.reshape(num_points, *shape)
         
         return torch.tensor(points, device=device, dtype=torch.float32)
 

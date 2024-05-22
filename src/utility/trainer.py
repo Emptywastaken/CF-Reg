@@ -1,14 +1,20 @@
-def get_trainer(type: str):
+def get_trainer(type: str, model, criterion, evaluator, config,  estimator = None):
     
     if type == "regularized":
-        from src.trainer.trainer_regularized import RegularizedTrainer
+        from src.trainer.trainer import CounterfactualLightningClassifier
 
-        return RegularizedTrainer
-
+        return CounterfactualLightningClassifier(model=model,
+                                                 criterion=criterion,
+                                                 config=config,
+                                                 evaluator=evaluator,
+                                                 estimator=estimator)
     
     elif type == "normal":
-        from src.trainer.trainer import Trainer
+        from src.trainer.trainer import LightningClassifier
 
-        return Trainer
+        return LightningClassifier(model=model,
+                                   criterion=criterion,
+                                   config=config,
+                                   evaluator=evaluator)
     
     

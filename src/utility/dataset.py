@@ -4,7 +4,7 @@ import torch
 from torch.utils.data import TensorDataset
 import numpy as np
 from typing import Tuple
-
+import os
 
 def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
     
@@ -20,7 +20,7 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
             
         except Exception:
             
-            raise ValueError("water dataset is not inside the data folder!")
+            raise ValueError(f"Water dataset is not inside the data folder! cwd {os.getcwd()}")
         
         df['ph'].fillna(value=df['ph'].median(),inplace=True)
         df['Sulfate'].fillna(value=df['Sulfate'].median(),inplace=True)
@@ -42,7 +42,6 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
         return train_set, test_set
     
     elif name == "mnist":
-        from torch.utils.data import Dataset
         from torchvision import datasets
         from torchvision import transforms
         

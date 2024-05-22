@@ -91,7 +91,7 @@ class MontecarloEstimator:
         - target (Tensor): The repeated and reshaped target tensor to match the perturbation structure.
         """
         batch_size: int = X.shape[0]
-        unit_dims: Tuple[int, ...] = (1, ) * len(self.shape)
+        unit_dims: Tuple[int, ...] = (1, ) 
         new_shape: Tuple[int, ...] = (self.n_samples, *unit_dims, *self.shape)
         perturbation: Tensor = self.perturbation.view(new_shape)
         repeat_dims: Tuple[int, ...] = (1, batch_size, *((1, )*len(new_shape[2:])))

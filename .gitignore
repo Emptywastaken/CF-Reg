@@ -2,3 +2,7 @@ __pycache__
 wandb
 *.gz
 *ubyte
+*.log
+outputs
+*.ckpt
+lightning_logs
