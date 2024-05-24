@@ -1,3 +1,4 @@
+from omegaconf import DictConfig
 import yaml
 
 
@@ -7,7 +8,12 @@ def merge_dict(dict_1: dict, dict_2: dict):
 
 def merge_hydra_wandb(cfg, wandb):
     
-    [merge_dict(v, wandb.config) if type(v) == dict else "skip" for k, v in cfg.items()]
+    for k, v in cfg.items():
+        if type(v) == DictConfig:
+              
+            merge_dict(v, wandb)
+    
+    pass
 
 def read_yaml(filename):
     
