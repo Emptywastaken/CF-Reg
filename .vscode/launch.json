@@ -7,10 +7,11 @@
 
         
         {
-            "name": "Python",
+            "name": "Python Debugger: Current File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "program": "main.py",
+            "args": ["--run_mode", "run"],
             "console": "integratedTerminal",
             "justMyCode": false
         }

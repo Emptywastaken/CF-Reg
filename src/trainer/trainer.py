@@ -1,5 +1,5 @@
 import torch
-from src.integration.montecarlo import MontecarloEstimator
+from src.estimator.montecarlo import MontecarloEstimator
 import pytorch_lightning as L
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
@@ -116,7 +116,7 @@ class LightningClassifier(L.LightningModule):
         
     def configure_optimizers(self):
         
-        return get_optimizer(params=self.model.parameters(), config=self.config)
+        return get_optimizer(params=self.model.parameters(), config=self.optim_config)
         
         
     def on_train_epoch_start(self) -> None:

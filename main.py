@@ -2,115 +2,94 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from typing import List, Tuple
-from src.integration.montecarlo import MontecarloEstimator
-from src.trainer.trainer import LightningClassifier
-from src.utility.dataset import get_dataset
-from src.utility.evaluation import ClassifierEvaluator
-from src.utility.models import get_model
-from src.utility.loss import get_loss
+from src.estimator import MontecarloEstimator
+from src.trainer import LightningClassifier
+from src.utility import get_dataset, get_model, get_loss, merge_hydra_wandb, ClassifierEvaluator, read_yaml
 import wandb
 from src.sweep_configs.sweeps import sweep_configuration_dynamic_alpha, sweep_configuration_normal, sweep_configuration_normal_no_l2, nosweep
 import hydra
-from omegaconf import DictConfig
+from omegaconf import DictConfig, OmegaConf
 import pytorch_lightning as pl
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities import disable_possible_user_warnings
-
 disable_possible_user_warnings()
 
-@hydra.main(version_base="1.3", config_path="configs", config_name="config")
+
+@hydra.main(version_base="1.3", config_path="hydra_configs", config_name="config")
 def main(cfg: DictConfig):
     
-    
-    if wandb.run:
-        wandb.finish()
+    # sweep_config = read_yaml(f'wandb_sweeps_configs/{cfg.config_name}.yaml')
+    # sweep_id = wandb.sweep(sweep=sweep_config, project=cfg.project)
+
+            
+    def train():
         
-    run = wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)    
+        with wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)  as run: 
+
+
+            merge_hydra_wandb(cfg, wandb.config)
+            
+
+            # To increase performances on CUDA 
+            torch.set_float32_matmul_precision('high')
+            
+
+            estimator = None
+            wandb_logger = WandbLogger(project=cfg.logger.project)
+            
+            np.random.seed(cfg.seed) 
+            torch.manual_seed(cfg.seed)
+            if torch.cuda.is_available():
+                torch.cuda.manual_seed(cfg.seed)
+                torch.cuda.manual_seed_all(cfg.seed)
+                torch.backends.cudnn.deterministic = True
+                torch.backends.cudnn.benchmark = False
+
+            trainset, testset = get_dataset(name=cfg.data.name) 
+            
+            model = get_model(config=OmegaConf.to_container(cfg.model))
+            criterion = get_loss(**cfg.loss)
+
+            if "regularized" in cfg.loss_type:
+                
+                estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
+            
+            evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
+            clf =  LightningClassifier(model=model, criterion=criterion, config=OmegaConf.to_container(cfg.optimizer, resolve=True), evaluator=evaluator, estimator=estimator)
+                
+            train_loader = DataLoader(trainset, **cfg.loader)
+            test_loader = DataLoader(testset, **cfg.loader)
+            
+            wandb_logger.watch(model, log='gradients', log_freq=100)
+
+            trainer = pl.Trainer(enable_progress_bar=cfg.trainer.enable_progress_bar, 
+                                max_epochs=cfg.trainer.max_epochs, 
+                                logger=wandb_logger, 
+                                num_sanity_val_steps=cfg.trainer.num_sanity_val_step, 
+                                accelerator=cfg.trainer.accelerator)
+            
+            trainer.fit(clf, train_loader, test_loader)
     
     
-    
-    model_config: dict = {
-        "model_type": "MLP",
-        "input_dim": cfg.data.input_dim,
-        "hidden_layers": [30, 20, 5], 
-        "output_dim": cfg.data.nclasses,
-        "dropout": 0.5
-    }
-   
-    
-    loss_config: dict = {
-        "name": "normal",
-        "alpha": 0.1
-    }
-    
-    
-    optimizer_config = {
-        "name": "adam",
-        "lr": 0.0001,
-        "weight_decay": 0.00001,
-        "eps": 0.000001   
-    }
-    
-    loader_config = {
-        "batch_size": 32,
-        "shuffle": True,
+    if cfg.run_mode == 'sweep':
+
+        sweep_config = read_yaml(f'wandb_sweeps_configs/{cfg.logger.config}.yaml')
+        sweep_id = wandb.sweep(sweep=sweep_config, project=cfg.logger.project)
+        wandb.agent(sweep_id=sweep_id, function=train)
         
-    }
-    
-    estimator_config = {
-        "n_samples": 100,
-        "radius": 1.5
-    }
-
-    # To increase performances on CUDA 
-    torch.set_float32_matmul_precision('high')
-    
-
-    estimator = None
-    wandb_logger = WandbLogger(project=cfg.logger.project)
-    
-    np.random.seed(cfg.seed) 
-    torch.manual_seed(cfg.seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed(cfg.seed)
-        torch.cuda.manual_seed_all(cfg.seed)
-        torch.backends.cudnn.deterministic = True
-        torch.backends.cudnn.benchmark = False
-
-    trainset, testset = get_dataset(name=cfg.data.name) 
-       
-    model = get_model(config=model_config)
-    criterion = get_loss(**loss_config)
-
-    if "regularized" in cfg.loss_type:
+    elif cfg.run_mode == "run":
+        train()
         
-        estimator = MontecarloEstimator(function=model, train_set=trainset, **estimator_config)
-    
-    evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
-    clf =  LightningClassifier(model=model, criterion=criterion, config=optimizer_config, evaluator=evaluator, estimator=estimator)
+    else:
         
-    train_loader = DataLoader(trainset, **loader_config)
-    test_loader = DataLoader(testset, **loader_config)
-    
-    wandb_logger.watch(model, log='gradients', log_freq=100)
-
-    trainer = pl.Trainer(enable_progress_bar=cfg.trainer.enable_progress_bar, 
-                         max_epochs=cfg.trainer.max_epochs, 
-                         logger=wandb_logger, 
-                         num_sanity_val_steps=cfg.trainer.num_sanity_val_step, 
-                         accelerator=cfg.trainer.accelerator)
-    
-    trainer.fit(clf, train_loader, test_loader)
-    
-    
+        raise ValueError(f"Values for run_mode can be sweep or run, you insert {cfg.run_mode}")
 
 if __name__ == "__main__":
     
-    #main()
+    main()
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration_normal, project='counterfactual_overfitting')
+    # Load sweep configuration from YAML file
 
-    wandb.agent(sweep_id=sweep_id, function=main)
     
 
 #TODO: Modifica il modulo lightning per permettere di far girare anche gli altri casi

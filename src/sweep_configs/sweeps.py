@@ -44,7 +44,7 @@ sweep_configuration_normal = {
         #"losses": {"values": ["normal"]},
         "radius": {"values": [0.0]}, #{"min": 0.0001, "max": 1.5},
         "samples": {"values": [0]}, #{"min": 100, "max": 1000}
-        #"alpha": {"min": 0.01, "max": 1.0}
+        "alpha": {"min": 0.01, "max": 1.0}, 
         "l2": {"min": 0.001, "max": 0.01}
     }
 }
