@@ -6,7 +6,6 @@ from src.estimator import MontecarloEstimator
 from src.trainer import LightningClassifier
 from src.utility import get_dataset, get_model, get_loss, merge_hydra_wandb, ClassifierEvaluator, read_yaml
 import wandb
-from src.sweep_configs.sweeps import sweep_configuration_dynamic_alpha, sweep_configuration_normal, sweep_configuration_normal_no_l2, nosweep
 import hydra
 from omegaconf import DictConfig, OmegaConf
 import pytorch_lightning as pl

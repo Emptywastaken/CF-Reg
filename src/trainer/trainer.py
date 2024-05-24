@@ -146,7 +146,7 @@ class LightningClassifier(L.LightningModule):
         values: dict = {"input": output, "target": target}
         if self.counterfactual:
             out, target_cf = self.estimator.get_counterfactual(data, output)
-            values = values | { "out": out, "target_cf": target_cf}
+            values = values | { "out_cf": out, "target_cf": target_cf}
             
         loss = self.criterion(**values)        
         self.train_target += target.tolist()
@@ -181,7 +181,7 @@ class LightningClassifier(L.LightningModule):
         values: dict = {"input": output, "target": target}
         if self.counterfactual:
             out, target_cf = self.estimator.get_counterfactual(data, output)
-            values = values | { "out": out, "target_cf": target_cf}        
+            values = values | { "out_cf": out, "target_cf": target_cf}        
             
         val_loss = self.criterion(**values)   
         self.val_target += target.tolist()

@@ -1,5 +1,4 @@
 
-from src.functions.abstract_function import GenericFunction
 from src.utility.geometric import Sphere
 import torch
 import numpy as np
