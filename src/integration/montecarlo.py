@@ -42,29 +42,6 @@ class MontecarloEstimator:
         self.include_volume = True
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
-    # def compute(self, classifier_out):
-    #     """
-    #     Perturbation must be of dimension 100, 500, 5 namely P, S, F
-    #     Where P is the number of perturbation
-    #     S is the number of sample
-    #     F is the number of features
-    #     Sample must be of dimensio S, F
-    #     """ 
-    #     sample_perturbed = self.X.to("cuda") + self.perturbation.unsqueeze(1).repeat(1, self.X.shape[0], 1)
-    #     out = self.function(sample_perturbed)
-    #     out = torch.argmax(out, dim=-1)
-    #     classifier_out = classifier_out[self.random_index]
-    #     classifier_out = classifier_out.unsqueeze(1)
-    #     classifier_out = classifier_out.repeat(1, self.n_samples)
-    #     classifier_out = classifier_out.to("cuda")
-    #     classifier_out = classifier_out.permute(1, 0)
-    #     different = out != classifier_out
-    #     average_function_value = torch.sum(different, dim=0)/different.shape[0]
-    #     value = self.volume * average_function_value if self.include_volume else average_function_value
-        
-        
-    #     return torch.mean(value).cpu(), torch.std(value).cpu()
-    
     def get_counterfactual(self, 
                        X: Tensor, 
                        target: Tensor) -> Tuple[Tensor, Tensor]:

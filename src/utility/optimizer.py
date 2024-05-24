@@ -1,14 +1,19 @@
-def get_optimizer(name: str, params, lr: float, **kwargs):
+def get_optimizer(params, **kwargs):
     
-    regularization = kwargs["l2"] if "l2" in kwargs else 0.0
+    config = kwargs["config"]
+    name = config.pop("name")
 
     
     if name.lower() == "adam":
         from torch.optim import Adam
         
-        return Adam(params=params, lr=lr, weight_decay=regularization)
+        optim = Adam(params=params, **config)
+        
+        return optim
     
     elif name.lower() == "sgd":
         from torch.optim import SGD
         
-        return SGD(params=params, lr=lr, weight_decay=regularization)
+        optim = SGD(params=params, **config)
+        
+        return optim

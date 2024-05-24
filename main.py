@@ -3,71 +3,72 @@ from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from typing import List, Tuple
 from src.integration.montecarlo import MontecarloEstimator
+from src.trainer.trainer import LightningClassifier
 from src.utility.dataset import get_dataset
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.models import get_model
 from src.utility.loss import get_loss
 import wandb
-from src.sweep_configs.sweeps import sweep_configuration_dynamic_alpha, nosweep
+from src.sweep_configs.sweeps import sweep_configuration_dynamic_alpha, sweep_configuration_normal, sweep_configuration_normal_no_l2, nosweep
 import hydra
 from omegaconf import DictConfig
 import pytorch_lightning as pl
 from lightning.pytorch.loggers import WandbLogger
-import multiprocessing as mp
-import os
-from src.utility.trainer import get_trainer
 from lightning.pytorch.utilities import disable_possible_user_warnings
 
-# ignore all warnings that could be false positives
 disable_possible_user_warnings()
-# Optionally set WANDB_MODE environment variable
-
-
-#PARAMETRI HYDRA
-
-#dataset = "water"
-#out_classes = 2
-#model_type = "MLP"
-#typ = "regularized"
-#loss_type = "dyn_regularized"
-# enable_progress_bar=True
-# accelerator="gpu"
-# num_sanity_val_steps=0
-
-#PARAMETRI SWEEP
-
-# nosweep = {
-#     "batch_size": 256,
-#     "epochs": 1500,
-#     "lr": 0.0001,
-#     "radius":  1.5,
-#     "samples": 1000,
-#     "alpha": 0.5,
-#     "optimizer": "adam",
-#     "l2": 0.0
-# }
 
 @hydra.main(version_base="1.3", config_path="configs", config_name="config")
 def main(cfg: DictConfig):
     
-    torch.set_float32_matmul_precision('high')
     
     if wandb.run:
         wandb.finish()
         
-    #run = wandb.init(project=cfg.logger.project, mode=cfg.logger.mode, config=nosweep)
-    run = wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)
+    run = wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)    
     
-    batch_size = wandb.config.batch_size
-    n_samples = wandb.config.samples
-    radius = wandb.config.radius
-    epochs = wandb.config.epochs
-    alpha = 0.0
     
+    
+    model_config: dict = {
+        "model_type": "MLP",
+        "input_dim": cfg.data.input_dim,
+        "hidden_layers": [30, 20, 5], 
+        "output_dim": cfg.data.nclasses,
+        "dropout": 0.5
+    }
+   
+    
+    loss_config: dict = {
+        "name": "normal",
+        "alpha": 0.1
+    }
+    
+    
+    optimizer_config = {
+        "name": "adam",
+        "lr": 0.0001,
+        "weight_decay": 0.00001,
+        "eps": 0.000001   
+    }
+    
+    loader_config = {
+        "batch_size": 32,
+        "shuffle": True,
+        
+    }
+    
+    estimator_config = {
+        "n_samples": 100,
+        "radius": 1.5
+    }
+
+    # To increase performances on CUDA 
+    torch.set_float32_matmul_precision('high')
+    
+
+    estimator = None
     wandb_logger = WandbLogger(project=cfg.logger.project)
-    #wandb.init(project="counterfactual_overfitting")
     
-    device = 'cuda' if torch.cuda.is_available() and cfg.device == "cuda" else 'cpu'
     np.random.seed(cfg.seed) 
     torch.manual_seed(cfg.seed)
     if torch.cuda.is_available():
@@ -76,27 +77,25 @@ def main(cfg: DictConfig):
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark = False
 
-    trainset, testset = get_dataset(name=cfg.data.name)
-    
-    hidden_layers = [30, 20, 5]
-    
-    model = get_model(type=cfg.model_type, input_dim=cfg.data.input_dim, hidden_layers=hidden_layers, out_classes=cfg.data.nclasses)
+    trainset, testset = get_dataset(name=cfg.data.name) 
+       
+    model = get_model(config=model_config)
+    criterion = get_loss(**loss_config)
 
-    estimator = None if "regularized" not in cfg.loss_type else MontecarloEstimator(function=model, train_set=trainset, n_samples=n_samples, radius=radius)
-    
-    criterion = get_loss(name=cfg.loss_type, alpha=alpha)
+    if "regularized" in cfg.loss_type:
+        
+        estimator = MontecarloEstimator(function=model, train_set=trainset, **estimator_config)
     
     evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
-    
-    clf = get_trainer(type=cfg.loss_type, model=model, criterion=criterion, evaluator=evaluator, estimator=estimator, config=wandb.config)
-    
-    train_loader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
-    test_loader = DataLoader(testset, batch_size=batch_size)
+    clf =  LightningClassifier(model=model, criterion=criterion, config=optimizer_config, evaluator=evaluator, estimator=estimator)
+        
+    train_loader = DataLoader(trainset, **loader_config)
+    test_loader = DataLoader(testset, **loader_config)
     
     wandb_logger.watch(model, log='gradients', log_freq=100)
 
     trainer = pl.Trainer(enable_progress_bar=cfg.trainer.enable_progress_bar, 
-                         max_epochs=epochs, 
+                         max_epochs=cfg.trainer.max_epochs, 
                          logger=wandb_logger, 
                          num_sanity_val_steps=cfg.trainer.num_sanity_val_step, 
                          accelerator=cfg.trainer.accelerator)
@@ -109,6 +108,11 @@ if __name__ == "__main__":
     
     #main()
 
-    sweep_id = wandb.sweep(sweep=sweep_configuration_dynamic_alpha, project='counterfactual_overfitting')
+    sweep_id = wandb.sweep(sweep=sweep_configuration_normal, project='counterfactual_overfitting')
 
-    wandb.agent(sweep_id, function=main)
+    wandb.agent(sweep_id=sweep_id, function=main)
+    
+
+#TODO: Modifica il modulo lightning per permettere di far girare anche gli altri casi
+#TODO: aggiungi regolarizzazione l1 e dropout
+#TODO: aggiungi la funzione simil-relu alle immagini in greyscale

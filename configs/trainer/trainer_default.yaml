@@ -1,3 +1,4 @@
 enable_progress_bar: True
 accelerator: gpu
 num_sanity_val_step: 0
+max_epochs: 100

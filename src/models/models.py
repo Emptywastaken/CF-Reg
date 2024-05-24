@@ -17,23 +17,28 @@ if torch.cuda.is_available():
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, hidden_layers, output_dim):
+    def __init__(self, input_dim, hidden_layers, output_dim, dropout: float = 0.0):
         super(MLP, self).__init__()
         self.layers = nn.ModuleList()
+        self.use_dropout = dropout > 0.0
         
         # Create the first layer from the input dimension to the first hidden layer size
         current_dim = input_dim
         for hidden_dim in hidden_layers:
             self.layers.append(nn.Linear(current_dim, hidden_dim))
+            if self.use_dropout:
+                self.layers.append(nn.Dropout(dropout))
             current_dim = hidden_dim
         
         # Output layer
         self.layers.append(nn.Linear(current_dim, output_dim))
     
     def forward(self, x):
-        # Apply a ReLU activation function to each hidden layer
+        # Apply a ReLU activation function and dropout (if used) to each hidden layer
         for layer in self.layers[:-1]:
-            x = F.relu(layer(x))
+            x = layer(x)
+            if isinstance(layer, nn.Linear):
+                x = F.relu(x)
         # No activation function for the output layer (assuming classification task)
         x = self.layers[-1](x)
         return x

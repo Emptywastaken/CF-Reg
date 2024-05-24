@@ -10,4 +10,4 @@ version: 1
 seed: 42
 device: cuda
 model_type: MLP
-loss_type: dyn_regularized
+loss_type: normal #dyn_regularized 
