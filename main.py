@@ -35,6 +35,7 @@ def main(cfg: DictConfig):
             
 
             estimator = None
+            counterfactual: bool = True if cfg.loss.type != "normal" else False
             wandb_logger = WandbLogger(project=cfg.logger.project)
             
             np.random.seed(cfg.seed) 
@@ -47,26 +48,28 @@ def main(cfg: DictConfig):
 
             trainset, testset = get_dataset(name=cfg.data.name) 
             
-            model = get_model(config=OmegaConf.to_container(cfg.model))
+            model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": cfg.data.input_dim, "output_dim": cfg.data.nclasses})
             criterion = get_loss(**cfg.loss)
 
-            if "regularized" in cfg.loss_type:
+            if "regularized" in cfg.loss.type:
                 
                 estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
             
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
-            clf =  LightningClassifier(model=model, criterion=criterion, config=OmegaConf.to_container(cfg.optimizer, resolve=True), evaluator=evaluator, estimator=estimator)
+            
+            clf =  LightningClassifier(model=model, 
+                                       criterion=criterion, 
+                                       optim_config=OmegaConf.to_container(cfg.optimizer), 
+                                       evaluator=evaluator, 
+                                       estimator=estimator, 
+                                       counterfactual=counterfactual)
                 
             train_loader = DataLoader(trainset, **cfg.loader)
             test_loader = DataLoader(testset, **cfg.loader)
             
             wandb_logger.watch(model, log='gradients', log_freq=100)
 
-            trainer = pl.Trainer(enable_progress_bar=cfg.trainer.enable_progress_bar, 
-                                max_epochs=cfg.trainer.max_epochs, 
-                                logger=wandb_logger, 
-                                num_sanity_val_steps=cfg.trainer.num_sanity_val_step, 
-                                accelerator=cfg.trainer.accelerator)
+            trainer = pl.Trainer(**cfg.trainer, logger=wandb_logger)
             
             trainer.fit(clf, train_loader, test_loader)
     

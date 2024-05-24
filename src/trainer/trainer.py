@@ -98,7 +98,8 @@ class LightningClassifier(L.LightningModule):
                  criterion: torch.nn.Module,
                  optim_config: dict,
                  evaluator: ClassifierEvaluator,
-                 estimator: MontecarloEstimator) -> None:
+                 estimator: MontecarloEstimator,
+                 counterfactual: bool) -> None:
         
         super().__init__()
 
@@ -113,6 +114,7 @@ class LightningClassifier(L.LightningModule):
         self.val_loss = []
         self.evaluator = evaluator
         self.estimator = estimator
+        self.counterfactual = counterfactual
         
     def configure_optimizers(self):
         
@@ -141,7 +143,7 @@ class LightningClassifier(L.LightningModule):
         
         data, target = batch
         output = self.model(data)
-        values: dict = {"output": output, "target": target}
+        values: dict = {"input": output, "target": target}
         if self.counterfactual:
             out, target_cf = self.estimator.get_counterfactual(data, output)
             values = values | { "out": out, "target_cf": target_cf}
@@ -176,7 +178,7 @@ class LightningClassifier(L.LightningModule):
         
         data, target = batch
         output = self.model(data)
-        values: dict = {"output": output, "target": target}
+        values: dict = {"input": output, "target": target}
         if self.counterfactual:
             out, target_cf = self.estimator.get_counterfactual(data, output)
             values = values | { "out": out, "target_cf": target_cf}        

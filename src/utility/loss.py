@@ -4,7 +4,7 @@ from  src.losses.losses import CounterfactualRegularizationLoss, DynamicCounterf
 
 def get_loss(**kwargs) -> Module:
     
-    name: str = kwargs.pop("name")
+    name: str = kwargs.pop("type")
     
     if name == "regularized":
         """
@@ -19,7 +19,7 @@ def get_loss(**kwargs) -> Module:
     
     elif name == "normal":
         
-        return  torch.nn.CrossEntropyLoss()
+        return  torch.nn.functional.cross_entropy
     
     else:
         

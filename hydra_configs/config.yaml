@@ -1,5 +1,6 @@
 defaults:
   - _self_
+  - loader: loader
   - loss: normal
   - model: mlp
   - logger: wandb
