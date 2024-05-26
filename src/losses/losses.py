@@ -43,4 +43,4 @@ class DynamicCounterfactualRegularizationLoss(Module):
         counterfactual_loss = self.counterfactual_loss(out_cf, target_cf)
         predicted_class_cf = torch.argmax(out_cf, dim=1)
         alpha = (target_cf != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
-        return train_loss + alpha * counterfactual_loss
+        return  train_loss + alpha * counterfactual_loss

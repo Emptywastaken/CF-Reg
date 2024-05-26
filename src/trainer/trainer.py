@@ -109,9 +109,11 @@ class LightningClassifier(L.LightningModule):
         self.train_output = []
         self.train_target = []
         self.train_loss = []
+        self.train_p_x = []
         self.val_output = []
         self.val_target = []
         self.val_loss = []
+        self.val_p_x = []
         self.evaluator = evaluator
         self.estimator = estimator
         self.counterfactual = counterfactual
@@ -126,6 +128,7 @@ class LightningClassifier(L.LightningModule):
         self.train_output = []
         self.train_target = []
         self.train_loss = []
+        self.train_p_x = []
     
     def on_train_epoch_end(self) -> None:
         
@@ -136,7 +139,8 @@ class LightningClassifier(L.LightningModule):
                        f"{stage}/accuracy": accuracy, 
                        f"{stage}/f1-score": f1, 
                        f"{stage}/precision": precision, 
-                       f"{stage}/recall": recall}, on_epoch=True, on_step=False)  
+                       f"{stage}/recall": recall,
+                       f"{stage}/p_x": sum(self.train_p_x)/len(self.train_p_x)}, on_epoch=True, on_step=False)  
         
         
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
@@ -144,14 +148,16 @@ class LightningClassifier(L.LightningModule):
         data, target = batch
         output = self.model(data)
         values: dict = {"input": output, "target": target}
+        out, target_cf = self.estimator.get_counterfactual(data, output)
+        p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         if self.counterfactual:
-            out, target_cf = self.estimator.get_counterfactual(data, output)
             values = values | { "out_cf": out, "target_cf": target_cf}
-            
+
         loss = self.criterion(**values)        
         self.train_target += target.tolist()
         self.train_output += output.tolist()
         self.train_loss += [loss.item()]
+        self.train_p_x +=[p_x.item()]
         
         return loss
     
@@ -160,6 +166,7 @@ class LightningClassifier(L.LightningModule):
         self.val_output = []
         self.val_target = []
         self.val_loss = []
+        self.val_p_x = []
     
     def on_validation_epoch_end(self) -> None:
         
@@ -172,20 +179,23 @@ class LightningClassifier(L.LightningModule):
                         f"{stage}/accuracy": accuracy, 
                         f"{stage}/f1-score": f1, 
                         f"{stage}/precision": precision, 
-                        f"{stage}/recall": recall}, on_epoch=True, on_step=False) 
+                        f"{stage}/recall": recall,
+                        f"{stage}/p_x": sum(self.val_p_x)/len(self.val_p_x)}, on_epoch=True, on_step=False) 
 
     def validation_step(self, batch, batch_idx):
         
         data, target = batch
         output = self.model(data)
         values: dict = {"input": output, "target": target}
+        out, target_cf = self.estimator.get_counterfactual(data, output)
+        p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         if self.counterfactual:
-            out, target_cf = self.estimator.get_counterfactual(data, output)
             values = values | { "out_cf": out, "target_cf": target_cf}        
-            
+
         val_loss = self.criterion(**values)   
         self.val_target += target.tolist()
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
-        
+        self.val_p_x +=[p_x.item()]
+
         return val_loss

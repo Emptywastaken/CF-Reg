@@ -1,15 +1,15 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: normal
+  - loss: dyn_regularized
   - model: mlp
   - logger: wandb
   - data: water
   - trainer: trainer_default
-  - optimizer: adam
+  - optimizer: sgd
   - estimator: montecarlo
 
-run_mode: sweep
+run_mode: run #sweep
 project: counterfactual_overfitting
 name: experiments
 version: 1

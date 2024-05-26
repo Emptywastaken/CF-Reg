@@ -49,10 +49,7 @@ def main(cfg: DictConfig):
             
             model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": cfg.data.input_dim, "output_dim": cfg.data.nclasses})
             criterion = get_loss(**cfg.loss)
-
-            if "regularized" in cfg.loss.type:
-                
-                estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
+            estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
             
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
             

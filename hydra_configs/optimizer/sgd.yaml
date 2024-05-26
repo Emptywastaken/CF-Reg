@@ -1,0 +1,5 @@
+name: sgd
+lr: 0.0007238
+weight_decay: 0.0
+
+

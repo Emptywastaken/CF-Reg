@@ -31,34 +31,35 @@ class MontecarloEstimator:
         - None
         """
         self.sphere: Sphere = Sphere()
-        self.function = function.eval()
+        self.radius = radius
+        self.function = function.train()
         self.n_samples = n_samples
         self.random_index = torch.randint(low=0, high=len(train_set), size=(int(len(train_set)*fraction),))
         self.X, _ = train_set[self.random_index]  
         self.shape = self.X[0].shape
-        self.perturbation = self.sphere.random_points_in_sphere(num_points=n_samples, shape=self.shape, radius=radius)
+        #self.perturbation = self.sphere.random_points_in_sphere(num_points=n_samples, shape=self.shape, radius=radius)
         self.volume = self.sphere.hypersphere_volume(dimensions=np.prod(self.shape), radius=radius)
         self.include_volume = True
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def get_counterfactual(self, 
-                       X: Tensor, 
+                       data: Tensor, 
                        target: Tensor) -> Tuple[Tensor, Tensor]:
         
         """
-        Generate counterfactual samples by perturbing the input tensor `X` and computing the model's output.
+        Generate counterfactual samples by perturbing the input tensor `data` and computing the model's output.
         
         The perturbation tensor must have the dimensions (P, S, F), where:
         - P is the number of perturbations.
         - S is the number of samples.
         - F is the number of features.
         
-        The input tensor `X` must have dimensions (S, F), where:
+        The input tensor `data` must have dimensions (S, F), where:
         - S is the number of samples.
         - F is the number of features.
         
         Parameters:
-        - X (Tensor): The input tensor of shape (batch_size, num_features).
+        - data (Tensor): The input tensor of shape (batch_size, num_features).
         - target (Tensor): The target tensor, which will be used to generate the counterfactual targets.
         
         Returns:
@@ -66,14 +67,15 @@ class MontecarloEstimator:
         - out (Tensor): The output tensor from the model after perturbation, reshaped as required.
         - target (Tensor): The repeated and reshaped target tensor to match the perturbation structure.
         """
-        batch_size: int = X.shape[0]
+        perturbation = self.sphere.random_points_in_sphere(num_points=self.n_samples, shape=self.shape, radius=self.radius)
+        batch_size: int = data.shape[0]
         unit_dims: Tuple[int, ...] = (1, ) 
         new_shape: Tuple[int, ...] = (self.n_samples, *unit_dims, *self.shape)
-        perturbation: Tensor = self.perturbation.view(new_shape)
+        perturbation: Tensor = perturbation.view(new_shape)
         repeat_dims: Tuple[int, ...] = (1, batch_size, *((1, )*len(new_shape[2:])))
         perturbation: Tensor = perturbation.repeat(repeat_dims)       
-        X: Tensor = X.to(device=self.device) 
-        sample_perturbed: Tensor = X + perturbation 
+        data: Tensor = data.to(device=self.device) 
+        sample_perturbed: Tensor = data + perturbation 
         batch_dims: Tuple[int, ...] = (-1, *new_shape[2:])
         sample_perturbed: Tensor = sample_perturbed.reshape(batch_dims)
         out: Tensor = self.function(sample_perturbed)
@@ -84,4 +86,11 @@ class MontecarloEstimator:
         target: Tensor = target.to(self.device)
         
         return out, target
+    
+    def counterfactual_probability(self, out: Tensor, target: Tensor) -> Tensor:
+        
+        predicted_class_cf = torch.argmax(out, dim=1)
+        cf_fraction = (target != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
+        
+        return cf_fraction
       
