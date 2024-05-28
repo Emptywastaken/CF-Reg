@@ -17,10 +17,6 @@ disable_possible_user_warnings()
 @hydra.main(version_base="1.3", config_path="hydra_configs", config_name="config")
 def main(cfg: DictConfig):
     
-    # sweep_config = read_yaml(f'wandb_sweeps_configs/{cfg.config_name}.yaml')
-    # sweep_id = wandb.sweep(sweep=sweep_config, project=cfg.project)
-
-            
     def train():
         
         with wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)  as run: 
@@ -28,12 +24,9 @@ def main(cfg: DictConfig):
 
             merge_hydra_wandb(cfg, wandb.config)
             
-
             # To increase performances on CUDA 
             torch.set_float32_matmul_precision('high')
             
-
-            estimator = None
             counterfactual: bool = True if cfg.loss.type != "normal" else False
             wandb_logger = WandbLogger(project=cfg.logger.project)
             

@@ -148,7 +148,7 @@ class LightningClassifier(L.LightningModule):
         data, target = batch
         output = self.model(data)
         values: dict = {"input": output, "target": target}
-        out, target_cf = self.estimator.get_counterfactual(data, output)
+        out, target_cf = self.estimator.get_counterfactual(data, output, grad=self.counterfactual)
         p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         if self.counterfactual:
             values = values | { "out_cf": out, "target_cf": target_cf}
@@ -187,7 +187,7 @@ class LightningClassifier(L.LightningModule):
         data, target = batch
         output = self.model(data)
         values: dict = {"input": output, "target": target}
-        out, target_cf = self.estimator.get_counterfactual(data, output)
+        out, target_cf = self.estimator.get_counterfactual(data, output, grad=False)
         p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         if self.counterfactual:
             values = values | { "out_cf": out, "target_cf": target_cf}        

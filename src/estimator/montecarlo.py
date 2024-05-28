@@ -16,6 +16,7 @@ class MontecarloEstimator:
                  n_samples: int = 1000, 
                  radius: float = 1.0,
                  fraction: float = 0.8,
+                 distribution: str = "uniform",
                  **kwargs) -> None:
         """
         Parameters:
@@ -37,14 +38,16 @@ class MontecarloEstimator:
         self.random_index = torch.randint(low=0, high=len(train_set), size=(int(len(train_set)*fraction),))
         self.X, _ = train_set[self.random_index]  
         self.shape = self.X[0].shape
-        #self.perturbation = self.sphere.random_points_in_sphere(num_points=n_samples, shape=self.shape, radius=radius)
         self.volume = self.sphere.hypersphere_volume(dimensions=np.prod(self.shape), radius=radius)
         self.include_volume = True
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.distribution: str = distribution
+        self.random_function = self.sphere.random_normal_points_in_sphere if distribution == "normal" else self.sphere.random_uniform_points_in_sphere
 
     def get_counterfactual(self, 
                        data: Tensor, 
-                       target: Tensor) -> Tuple[Tensor, Tensor]:
+                       target: Tensor,
+                       grad: bool) -> Tuple[Tensor, Tensor]:
         
         """
         Generate counterfactual samples by perturbing the input tensor `data` and computing the model's output.
@@ -67,7 +70,8 @@ class MontecarloEstimator:
         - out (Tensor): The output tensor from the model after perturbation, reshaped as required.
         - target (Tensor): The repeated and reshaped target tensor to match the perturbation structure.
         """
-        perturbation = self.sphere.random_points_in_sphere(num_points=self.n_samples, shape=self.shape, radius=self.radius)
+        torch.set_grad_enabled(mode=grad)
+        perturbation = self.random_function(num_points=self.n_samples, shape=self.shape, radius=self.radius)
         batch_size: int = data.shape[0]
         unit_dims: Tuple[int, ...] = (1, ) 
         new_shape: Tuple[int, ...] = (self.n_samples, *unit_dims, *self.shape)

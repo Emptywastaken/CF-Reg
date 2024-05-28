@@ -6,7 +6,7 @@ defaults:
   - logger: wandb
   - data: water
   - trainer: trainer_default
-  - optimizer: sgd
+  - optimizer: adam
   - estimator: montecarlo
 
 run_mode: run #sweep
