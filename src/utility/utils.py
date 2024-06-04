@@ -13,7 +13,7 @@ def merge_hydra_wandb(cfg, wandb):
               
             merge_dict(v, wandb)
     
-    pass
+    
 
 def read_yaml(filename):
     
