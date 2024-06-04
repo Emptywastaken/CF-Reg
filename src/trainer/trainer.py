@@ -1,6 +1,7 @@
 import torch
 from src.estimator.montecarlo import MontecarloEstimator
 import pytorch_lightning as L
+from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
 
@@ -114,9 +115,16 @@ class LightningClassifier(L.LightningModule):
         self.val_target = []
         self.val_loss = []
         self.val_p_x = []
+        self.train_embeddings = []
+        self.test_embeddings = []
         self.evaluator = evaluator
         self.estimator = estimator
         self.counterfactual = counterfactual
+        self.show_embedding = False
+        
+        if self.show_embedding:
+            self.model.layers[-2].register_forward_hook(extract_embeddings_hook)
+
         
     def configure_optimizers(self):
         
@@ -136,6 +144,7 @@ class LightningClassifier(L.LightningModule):
         accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
         
         self.log_dict({f"{stage}/loss": sum(self.train_loss)/len(self.train_loss), 
+                       f"{stage}/epoch": self.current_epoch, 
                        f"{stage}/accuracy": accuracy, 
                        f"{stage}/f1-score": f1, 
                        f"{stage}/precision": precision, 
@@ -152,13 +161,26 @@ class LightningClassifier(L.LightningModule):
         p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         if self.counterfactual:
             values = values | { "out_cf": out, "target_cf": target_cf}
-
+            
+        torch.set_grad_enabled(mode=True)
         loss = self.criterion(**values)        
         self.train_target += target.tolist()
         self.train_output += output.tolist()
         self.train_loss += [loss.item()]
         self.train_p_x +=[p_x.item()]
         
+        if self.show_embedding:
+            from sklearn.decomposition import PCA
+            import matplotlib.pyplot as plt
+            from mpl_toolkits.mplot3d import Axes3D
+            
+            fig = plt.figure(figsize=(10, 7))
+            ax = fig.add_subplot(111, projection='3d')
+            pca: PCA = PCA(n_components=3)
+            pca_components = pca.fit_transform(self.model.layers[-2].embeddings.detach().cpu().numpy())
+            ax.scatter(pca_components[:100, 0], pca_components[:100, 1], pca_components[:100, 2], c=torch.argmax(out[:100], dim=1).detach().cpu().numpy())
+            plt.savefig(f"imgs/pca_{self.current_epoch}_{batch_idx}.png")
+            plt.close()
         return loss
     
     def on_validation_epoch_start(self) -> None:
@@ -176,6 +198,7 @@ class LightningClassifier(L.LightningModule):
             accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.val_output, self.val_target)
             
             self.log_dict({f"{stage}/loss": sum(self.val_loss)/len(self.val_loss), 
+                        f"{stage}/epoch": self.current_epoch, 
                         f"{stage}/accuracy": accuracy, 
                         f"{stage}/f1-score": f1, 
                         f"{stage}/precision": precision, 
@@ -197,5 +220,5 @@ class LightningClassifier(L.LightningModule):
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
         self.val_p_x +=[p_x.item()]
-
+        
         return val_loss

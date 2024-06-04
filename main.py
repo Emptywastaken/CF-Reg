@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 import numpy as np
 from typing import List, Tuple
 from src.estimator import MontecarloEstimator
@@ -11,23 +11,49 @@ from omegaconf import DictConfig, OmegaConf
 import pytorch_lightning as pl
 from lightning.pytorch.loggers import WandbLogger
 from lightning.pytorch.utilities import disable_possible_user_warnings
+from src.utility.utils import flatten_dict
+
 disable_possible_user_warnings()
+
+def log_params(cfg: DictConfig) -> None:
+    
+    import pandas as pd
+    
+        
+    temp_config = OmegaConf.to_container(cfg)
+    config_to_log = flatten_dict(temp_config)
+    config_to_log = pd.DataFrame([config_to_log])
+    config_to_log.astype(str)
+    param_table = wandb.Table(dataframe=config_to_log)
+
+    wandb.log({"params": param_table})
+    
+def set_run_name(cfg, run):
+    
+    from datetime import datetime
+
+    run_name: str = f"{cfg.model.model_type}_{cfg.data.name}_{cfg.loss.type}_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    run.name = run_name
+    run.save()
+
+def is_counterfactual(cfg):
+    
+    return True if cfg.loss.type != "normal" else False
 
 
 @hydra.main(version_base="1.3", config_path="hydra_configs", config_name="config")
-def main(cfg: DictConfig):
+def main(cfg: DictConfig) -> None:
     
     def train():
         
         with wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)  as run: 
 
-
             merge_hydra_wandb(cfg, wandb.config)
+            log_params(cfg)
+            set_run_name(cfg, run)
             
             # To increase performances on CUDA 
             torch.set_float32_matmul_precision('high')
-            
-            counterfactual: bool = True if cfg.loss.type != "normal" else False
             wandb_logger = WandbLogger(project=cfg.logger.project)
             
             np.random.seed(cfg.seed) 
@@ -39,11 +65,9 @@ def main(cfg: DictConfig):
                 torch.backends.cudnn.benchmark = False
 
             trainset, testset = get_dataset(name=cfg.data.name) 
-            
             model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": cfg.data.input_dim, "output_dim": cfg.data.nclasses})
             criterion = get_loss(**cfg.loss)
             estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
-            
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
             
             clf =  LightningClassifier(model=model, 
@@ -51,15 +75,13 @@ def main(cfg: DictConfig):
                                        optim_config=OmegaConf.to_container(cfg.optimizer), 
                                        evaluator=evaluator, 
                                        estimator=estimator, 
-                                       counterfactual=counterfactual)
+                                       counterfactual=is_counterfactual(cfg))
                 
             train_loader = DataLoader(trainset, **cfg.loader)
             test_loader = DataLoader(testset, **cfg.loader)
             
             wandb_logger.watch(model, log='gradients', log_freq=100)
-
             trainer = pl.Trainer(**cfg.trainer, logger=wandb_logger)
-            
             trainer.fit(clf, train_loader, test_loader)
     
     
@@ -70,6 +92,7 @@ def main(cfg: DictConfig):
         wandb.agent(sweep_id=sweep_id, function=train)
         
     elif cfg.run_mode == "run":
+        
         train()
         
     else:
@@ -80,10 +103,8 @@ if __name__ == "__main__":
     
     main()
 
-    # Load sweep configuration from YAML file
 
     
 
-#TODO: Modifica il modulo lightning per permettere di far girare anche gli altri casi
 #TODO: aggiungi regolarizzazione l1 e dropout
 #TODO: aggiungi la funzione simil-relu alle immagini in greyscale

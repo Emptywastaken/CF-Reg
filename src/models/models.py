@@ -32,6 +32,8 @@ class MLP(nn.Module):
         
         # Output layer
         self.layers.append(nn.Linear(current_dim, output_dim))
+        
+        
     
     def forward(self, x):
         # Apply a ReLU activation function and dropout (if used) to each hidden layer
@@ -42,7 +44,13 @@ class MLP(nn.Module):
         # No activation function for the output layer (assuming classification task)
         x = self.layers[-1](x)
         return x
+    
 
+def extract_embeddings_hook(module, input, output):
+    
+    module.embeddings = output
+    
+    
 class CNN(nn.Module):
     def __init__(self):
         super(CNN, self).__init__()
@@ -54,7 +62,7 @@ class CNN(nn.Module):
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), 2))
         x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = x.view(-1, 96)
+        x = x.view(-1, torch.prod(torch.tensor(x.shape[1:])))
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=-1)

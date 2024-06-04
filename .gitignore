@@ -6,3 +6,5 @@ wandb
 outputs
 *.ckpt
 lightning_logs
+imgs
+.*png

@@ -1,0 +1,3 @@
+name: mnist
+nclasses: 10
+input_dim: (28, 28)

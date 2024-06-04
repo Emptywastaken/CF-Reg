@@ -43,6 +43,7 @@ class MontecarloEstimator:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.distribution: str = distribution
         self.random_function = self.sphere.random_normal_points_in_sphere if distribution == "normal" else self.sphere.random_uniform_points_in_sphere
+        self.perturbation = self.random_function(num_points=self.n_samples, shape=self.shape, radius=self.radius)
 
     def get_counterfactual(self, 
                        data: Tensor, 
@@ -71,11 +72,10 @@ class MontecarloEstimator:
         - target (Tensor): The repeated and reshaped target tensor to match the perturbation structure.
         """
         torch.set_grad_enabled(mode=grad)
-        perturbation = self.random_function(num_points=self.n_samples, shape=self.shape, radius=self.radius)
         batch_size: int = data.shape[0]
         unit_dims: Tuple[int, ...] = (1, ) 
         new_shape: Tuple[int, ...] = (self.n_samples, *unit_dims, *self.shape)
-        perturbation: Tensor = perturbation.view(new_shape)
+        perturbation: Tensor = self.perturbation.view(new_shape)
         repeat_dims: Tuple[int, ...] = (1, batch_size, *((1, )*len(new_shape[2:])))
         perturbation: Tensor = perturbation.repeat(repeat_dims)       
         data: Tensor = data.to(device=self.device) 

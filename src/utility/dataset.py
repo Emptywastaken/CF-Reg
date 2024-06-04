@@ -63,6 +63,31 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
         test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
 
         return train_set, test_set
+    
+    elif name == "fashion":
+        
+        from torchvision import datasets
+        from torchvision import transforms
+        
+        training_data =   datasets.FashionMNIST("data", train=True, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ]))
+
+        test_data = datasets.FashionMNIST('data', train=False, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor(),
+                               transforms.Normalize(
+                                 (0.1307,), (0.3081,))
+                             ]))
+        
+        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
+        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+
+        return train_set, test_set
+        
         
     else:
         raise ValueError(f"Dataset {name} is not available!")
