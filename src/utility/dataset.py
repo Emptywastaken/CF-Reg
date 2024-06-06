@@ -87,6 +87,26 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
         test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
 
         return train_set, test_set
+    
+    elif name == "cifar10":
+        
+        from torchvision import datasets
+        from torchvision import transforms
+        
+        training_data =   datasets.CIFAR10("data", train=True, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor()
+                             ]))
+
+        test_data = datasets.CIFAR10('data', train=False, download=True,
+                             transform= transforms.Compose([
+                               transforms.ToTensor()
+                             ]))
+        
+        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
+        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+
+        return train_set, test_set
         
         
     else:
