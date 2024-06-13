@@ -21,7 +21,7 @@ def log_params(cfg: DictConfig) -> None:
     
         
     temp_config = OmegaConf.to_container(cfg)
-    config_to_log = flatten_dict(temp_config)
+    config_to_log = flatten_dict(d=temp_config)
     config_to_log = pd.DataFrame([config_to_log])
     config_to_log.astype(str)
     param_table = wandb.Table(dataframe=config_to_log)
@@ -65,7 +65,7 @@ def main(cfg: DictConfig) -> None:
                 torch.backends.cudnn.benchmark = False
 
             trainset, testset = get_dataset(name=cfg.data.name) 
-            model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": cfg.data.input_dim, "output_dim": cfg.data.nclasses})
+            model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": cfg.data.input_dim, "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
             criterion = get_loss(**cfg.loss)
             estimator = MontecarloEstimator(function=model, train_set=trainset, **cfg.estimator)
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)

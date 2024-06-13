@@ -93,10 +93,10 @@ if __name__ == "__main__":
 
     
     # Generate normal distributed points
-    points_normal = sphere.random_normal_points_in_sphere(num_points=5000, shape=(2,), radius=5).cpu()
+    points_normal = sphere.random_normal_points_in_sphere(num_points=5000, shape=(2,), radius=0.1).cpu()
 
     # Generate uniform distributed points
-    points_uniform = sphere.random_uniform_points_in_sphere(num_points=5000, shape=(2,), radius=5).cpu()
+    points_uniform = sphere.random_uniform_points_in_sphere(num_points=5000, shape=(2,), radius=0.1).cpu()
 
     # Compute KDE for normal points
     kde_normal = gaussian_kde(points_normal.T)

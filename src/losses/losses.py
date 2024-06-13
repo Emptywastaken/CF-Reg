@@ -31,7 +31,7 @@ class DynamicCounterfactualRegularizationLoss(Module):
         self.train_loss = torch.nn.CrossEntropyLoss()
         self.counterfactual_loss = torch.nn.CrossEntropyLoss()
     
-    def forward(self, input: torch.tensor, target: torch.tensor, out_cf: torch.tensor, target_cf: torch.tensor):
+    def forward(self, input: torch.Tensor, target: torch.Tensor, out_cf: torch.Tensor, target_cf: torch.Tensor):
         """
         out dimension: N, C
         target dimension: N

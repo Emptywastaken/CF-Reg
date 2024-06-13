@@ -1,3 +1,4 @@
-name: mnist
+name: cifar10
 nclasses: 10
-input_dim: (32, 32)
+input_dim: [32, 32]
+channel_in: 3

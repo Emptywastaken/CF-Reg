@@ -4,7 +4,7 @@ defaults:
   - loss: normal
   - model: cnn
   - logger: wandb
-  - data: mnist
+  - data: cifar10
   - trainer: trainer_default
   - optimizer: adam
   - estimator: montecarlo

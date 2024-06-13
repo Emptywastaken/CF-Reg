@@ -1,8 +1,9 @@
-from omegaconf import DictConfig
+from typing import Any, Dict
+from omegaconf import DictConfig, DictKeyType
 import yaml
 
 
-def merge_dict(dict_1: dict, dict_2: dict):
+def merge_dict(dict_1: dict | DictConfig, dict_2: dict):
 
     dict_1.update({key: dict_2[key] for key in dict_1 if key in dict_2})
 
@@ -22,7 +23,7 @@ def read_yaml(filename):
     
     
     
-def flatten_dict(d: dict, parent_key: str = '', sep: str = '_') -> dict:
+def flatten_dict(d: Dict[Any, Any] | DictConfig, parent_key: str | DictKeyType = '', sep: str = '_') -> dict:
     
     items = []
     for k, v in d.items():

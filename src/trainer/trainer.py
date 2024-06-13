@@ -5,7 +5,7 @@ from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
 
-         
+
 
 class LightningClassifier(L.LightningModule):
     

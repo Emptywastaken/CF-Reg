@@ -6,10 +6,10 @@ import numpy as np
 from typing import Tuple
 import os
 
-def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
+def get_dataset(name: str, processing: str = "norm") -> Tuple[TensorDataset, TensorDataset]:
     
-    from sklearn.preprocessing import StandardScaler
-    scaler = StandardScaler()
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler
+    scaler = StandardScaler() if processing == "standard" else MinMaxScaler()
     dtype = torch.float32
     seed = 42
 
@@ -93,18 +93,12 @@ def get_dataset(name: str) -> Tuple[TensorDataset, TensorDataset]:
         from torchvision import datasets
         from torchvision import transforms
         
-        training_data =   datasets.CIFAR10("data", train=True, download=True,
-                             transform= transforms.Compose([
-                               transforms.ToTensor()
-                             ]))
+        training_data =   datasets.CIFAR10("data", train=True, download=True)
 
-        test_data = datasets.CIFAR10('data', train=False, download=True,
-                             transform= transforms.Compose([
-                               transforms.ToTensor()
-                             ]))
+        test_data = datasets.CIFAR10('data', train=False, download=True)
         
-        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
-        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+        train_set = TensorDataset(torch.Tensor(training_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(training_data.targets).type(torch.uint8))
+        test_set = TensorDataset(torch.from_numpy(test_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(test_data.targets).type(torch.uint8))
 
         return train_set, test_set
         

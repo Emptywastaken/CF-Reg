@@ -19,8 +19,12 @@ def get_model(**kwargs) -> torch.nn.Module:
     
     elif model_type == "CNN":
         from src.models.models import CNN
-
-        model = CNN()
+        
+        model = CNN(dimension_input=config["input_dim"][0], 
+                    classes=config["nclasses"], 
+                    channel_input=config["channel_in"], 
+                    channel_list=config["channel_list"], 
+                    kernel_list=config["kernel_list"])
         
         return model.to(device)
     
