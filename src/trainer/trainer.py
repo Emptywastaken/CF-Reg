@@ -4,6 +4,7 @@ import pytorch_lightning as L
 from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
+import inspect
 
 
 
@@ -51,39 +52,50 @@ class LightningClassifier(L.LightningModule):
         self.train_output = []
         self.train_target = []
         self.train_loss = []
-        self.train_p_x = []
+        self.train_estimate = []
     
     def on_train_epoch_end(self) -> None:
         
         stage: str = "train"
+  
         accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
         
-        self.log_dict({f"{stage}/loss": sum(self.train_loss)/len(self.train_loss), 
-                       f"{stage}/epoch": self.current_epoch, 
-                       f"{stage}/accuracy": accuracy, 
-                       f"{stage}/f1-score": f1, 
-                       f"{stage}/precision": precision, 
-                       f"{stage}/recall": recall,
-                       f"{stage}/p_x": sum(self.train_p_x)/len(self.train_p_x)}, on_epoch=True, on_step=False)  
+    
+        log_data = {
+            f"{stage}/loss": sum(self.train_loss) / len(self.train_loss),
+            f"{stage}/epoch": self.current_epoch,
+            f"{stage}/accuracy": accuracy,
+            f"{stage}/f1-score": f1,
+            f"{stage}/precision": precision,
+            f"{stage}/recall": recall
+        }
+
+        estimator_log_data = self.estimator.build_log(self.train_estimate, stage)
+
+        log_data.update(estimator_log_data)
+
+        self.log_dict(log_data, on_epoch=True, on_step=False) 
         
         
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
         
         data, target = batch
         output = self.model(data)
-        values: dict = {"input": output, "target": target}
-        out, target_cf = self.estimator.get_counterfactual(data, output, grad=self.counterfactual)
-        p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
-        if self.counterfactual:
-            values = values | { "out_cf": out, "target_cf": target_cf}
-            
+        
+        #out, target_cf = self.estimator.get_counterfactual(data, output, grad=self.counterfactual)
+        #p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
+        #if self.counterfactual:
+        #    values = values | { "out_cf": out, "target_cf": target_cf}
+        estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
+        values: dict = {"input": output, "target": target, "data": data}
+
         torch.set_grad_enabled(mode=True)
         loss = self.criterion(**values)        
         self.train_target += target.tolist()
         self.train_output += output.tolist()
         self.train_loss += [loss.item()]
-        self.train_p_x +=[p_x.item()]
-        
+        self.train_estimate += estimate.tolist()
+
         if self.show_embedding:
             from sklearn.decomposition import PCA
             import matplotlib.pyplot as plt
@@ -103,7 +115,8 @@ class LightningClassifier(L.LightningModule):
         self.val_output = []
         self.val_target = []
         self.val_loss = []
-        self.val_p_x = []
+        self.val_estimate = []
+    
     
     def on_validation_epoch_end(self) -> None:
         
@@ -112,28 +125,37 @@ class LightningClassifier(L.LightningModule):
             stage: str = "validation"
             accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.val_output, self.val_target)
             
-            self.log_dict({f"{stage}/loss": sum(self.val_loss)/len(self.val_loss), 
-                        f"{stage}/epoch": self.current_epoch, 
-                        f"{stage}/accuracy": accuracy, 
-                        f"{stage}/f1-score": f1, 
-                        f"{stage}/precision": precision, 
-                        f"{stage}/recall": recall,
-                        f"{stage}/p_x": sum(self.val_p_x)/len(self.val_p_x)}, on_epoch=True, on_step=False) 
+            log_data = {
+                f"{stage}/loss": sum(self.val_loss) / len(self.val_loss),
+                f"{stage}/epoch": self.current_epoch,
+                f"{stage}/accuracy": accuracy,
+                f"{stage}/f1-score": f1,
+                f"{stage}/precision": precision,
+                f"{stage}/recall": recall
+            }
+
+            estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
+
+            log_data.update(estimator_log_data)
+
+            self.log_dict(log_data, on_epoch=True, on_step=False) 
 
     def validation_step(self, batch, batch_idx):
         
         data, target = batch
         output = self.model(data)
-        values: dict = {"input": output, "target": target}
-        out, target_cf = self.estimator.get_counterfactual(data, output, grad=False)
-        p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
-        if self.counterfactual:
-            values = values | { "out_cf": out, "target_cf": target_cf}        
+        #values: dict = {"input": output, "target": target}
+        #out, target_cf = self.estimator.get_counterfactual(data, output, grad=False)
+        #p_x = self.estimator.get_estimate(out=out, target=target_cf)
+        estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
+        values: dict = {"input": output, "target": target, "data": data}
+        #if self.counterfactual:
+        #    values = values | { "out_cf": out, "target_cf": target_cf}        
 
         val_loss = self.criterion(**values)   
         self.val_target += target.tolist()
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
-        self.val_p_x +=[p_x.item()]
+        self.val_estimate += estimate.tolist()
         
         return val_loss

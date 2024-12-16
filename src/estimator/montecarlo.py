@@ -1,4 +1,4 @@
-
+from .estimator import Estimator
 from src.utility.geometric import Sphere
 import torch
 import numpy as np
@@ -8,7 +8,7 @@ from typing import Tuple, TypeAlias
 Tensor: TypeAlias = torch.Tensor
 
 
-class MontecarloEstimator:
+class MontecarloEstimator(Estimator):
 
     def __init__(self, 
                  function: torch.nn.Module, 
@@ -91,10 +91,19 @@ class MontecarloEstimator:
         
         return out, target
     
-    def counterfactual_probability(self, out: Tensor, target: Tensor) -> Tensor:
-        
+    def get_estimate(self, out: Tensor, target: Tensor) -> Tensor:
+        """
+        Returns:
+            torch.Tensor
+        """
         predicted_class_cf = torch.argmax(out, dim=1)
         cf_fraction = (target != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
         
-        return cf_fraction
+        return torch.tensor(cf_fraction, dtype=torch.float32)
+    
+    def get_estimate_name(self) -> str:
+        """
+        Implementation of get_estimate_name abstract method.
+        """
+        return "p_x"
       

@@ -21,13 +21,49 @@ if torch.cuda.is_available():
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+class BLogisticRegression(nn.Module): 
+    def __init__(self, **kwargs):
+        super(BLogisticRegression, self).__init__()
+        self.linear = nn.Linear(kwargs["input_dim"], 1) # binary classification
+
+    def forward(self, x):
+        return self.linear(x).squeeze(1)
+    
+    def linearize(self, data):
+        """
+        Computes the first-order Taylor expansion of the LogisticRegression for each element in a batch.
+        For a linear model, the output is already the linearized version.
+
+        Args:
+            data (torch.Tensor): A batch of input tensors of shape [batch_size, input_dim].
+
+        Returns:
+            dict: A dictionary containing:
+                - 'output': The output of the LogisticRegression for the batch, shape [batch_size, 1].
+                - 'gradient': The model's parameters (weights), shape [1, input_dim].
+                - 'linearized': The model itself, represented by the weights and bias.
+        """
+        # Compute the forward pass
+        output = self.forward(data)  # Shape: [batch_size, 1]
+
+        # Extract the model's parameters (weights and bias)
+        weights = self.linear.weight.detach()  # Shape: [1, input_dim]
+        #bias = self.linear.bias.detach()  # Shape: [1]
+
+        return {
+            "output": output.detach(),  # Raw model outputs
+            "gradient": weights.detach(),  # Model's gradients w.r.t input are the weights
+            "linearized": self,  # Linearized representation of the model
+        }
+        #TODO define a linearize function that linearize the metod at some datapoints, since LogisticRegression is linear, it doesn't do anything but agrees to the same output
+        #       of MLP.linearize
 
 class MLP(nn.Module):
     def __init__(self, **kwargs):
-    #def __init__(self, input_dim, hidden_layers, nclasses: int, dropout: float = 0.0):
         super(MLP, self).__init__()
         self.layers = nn.ModuleList()
         self.use_dropout = kwargs["dropout"] > 0.0
+        self.apply_softmax = kwargs.get("apply_softmax", False)  # Optional parameter
         
         # Create the first layer from the input dimension to the first hidden layer size
         current_dim = kwargs["input_dim"]
@@ -39,17 +75,69 @@ class MLP(nn.Module):
         
         # Output layer
         self.layers.append(nn.Linear(current_dim, kwargs["nclasses"]))
-        
+
     def forward(self, x: torch.Tensor):
         # Apply a ReLU activation function and dropout (if used) to each hidden layer
         for layer in self.layers[:-1]:
             x = layer(x)
             if isinstance(layer, nn.Linear):
                 x = F.relu(x)
-        # No activation function for the output layer (assuming classification task)
+        
+        # Output layer
         x = self.layers[-1](x)
+        
+        # Apply softmax if required
+        if self.apply_softmax:
+            x = F.softmax(x, dim=-1)
+        
         return x
-    
+
+    def linearize(self, x: torch.Tensor):
+        """
+        Computes the first-order Taylor expansion of the MLP for each element in a batch.
+
+        Args:
+            x (torch.Tensor): A batch of input tensors of shape [batch_size, input_dim].
+
+        Returns:
+            dict: A dictionary containing:
+                - 'output': The output of the MLP for the batch, shape [batch_size, nclasses].
+                - 'gradient': The gradient of the output w.r.t. the input, shape [batch_size, nclasses, input_dim].
+                - 'linearized': The linearized approximation for each input in the batch, shape [batch_size, nclasses].
+        """
+        # Ensure gradients are tracked for the input
+        x.requires_grad_(True)
+
+        # Compute the forward pass and optionally apply softmax
+        def forward_single_input(x_single):
+            logits = self.forward(x_single.unsqueeze(0)).squeeze(0)
+            if self.apply_softmax:
+                return F.softmax(logits, dim=-1)  # Apply softmax to logits
+            return logits  # Raw logits if softmax is not applied
+
+        # Compute the Jacobian for each input in the batch
+        # Shape of jacobian: [batch_size, nclasses, input_dim]
+        jacobian = torch.autograd.functional.jacobian(
+            forward_single_input, x, create_graph=True
+        )
+
+        # Compute the forward pass
+        output = self.forward(x)  # Shape: [batch_size, nclasses]
+
+        # Apply softmax to the output if needed
+        if self.apply_softmax:
+            output = F.softmax(output, dim=-1)
+
+        # Compute the linearized approximation
+        # Delta x: perturbation around the input
+        delta_x = x - x.detach()
+        linearized_approximation = output + torch.einsum("bki,bi->bk", jacobian, delta_x)   #TODO this line contains an error
+
+        return {
+            "output": output.detach(),  # Original outputs
+            "gradient": jacobian.detach(),  # Gradients for each input-output pair
+            "linearized": linearized_approximation.detach(),  # First-order approximation
+        }
 
 def extract_embeddings_hook(module, input, output):
     
@@ -95,7 +183,6 @@ class CNN(nn.Module):
     
 
 
-
 class NoiseModule(nn.Module):
     
     def __init__(self, 
@@ -128,3 +215,4 @@ class NoiseModule(nn.Module):
         
         return sample_perturbed
         
+    

@@ -9,7 +9,7 @@ def get_model(**kwargs) -> torch.nn.Module:
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    
+    print(model_type)
     if model_type == "MLP":
         from src.models.models import MLP
         
@@ -28,6 +28,12 @@ def get_model(**kwargs) -> torch.nn.Module:
         
         return model.to(device)
     
+    elif model_type =="LogisticRegression":
+        from src.models.models import BLogisticRegression
+
+        model = BLogisticRegression(** config)
+
+        return model.to(device)
     else:
         
         raise ValueError(f"{model_type} is not a valide model type!")

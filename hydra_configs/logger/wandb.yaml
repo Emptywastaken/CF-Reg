@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: offline
-config: cf_dyn
+mode: online
+config: scfe_grid

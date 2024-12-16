@@ -1,7 +1,6 @@
 from torch.nn import Module
 import torch
-from  src.losses.losses import CounterfactualRegularizationLoss, DynamicCounterfactualRegularizationLoss
-
+from  src.losses.losses import CounterfactualRegularizationLoss, DynamicCounterfactualRegularizationLoss, SCFERegularizationLoss
 def get_loss(**kwargs) -> Module:
     
     name: str = kwargs.pop("type")
@@ -18,9 +17,15 @@ def get_loss(**kwargs) -> Module:
         return DynamicCounterfactualRegularizationLoss()
     
     elif name == "normal":
-        
-        return  torch.nn.functional.cross_entropy
+        binary: bool = kwargs.pop("binary")
+        if binary:
+            return torch.nn.functional.binary_cross_entropy_with_logits
+        else:
+            return  torch.nn.functional.cross_entropy
     
+    elif name == "scfe_regularization":
+        return SCFERegularizationLoss(**kwargs)
+
     else:
         
         raise ValueError(f"This loss has not been implemented yet!")

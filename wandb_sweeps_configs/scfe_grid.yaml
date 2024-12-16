@@ -1,0 +1,10 @@
+method: grid
+name: counterfactual_overfitting
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  reg_coef:
+    values: [1.0, 0.1]
+  alpha:
+    values: [1,0.5]

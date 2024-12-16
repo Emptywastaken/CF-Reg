@@ -6,12 +6,53 @@ import numpy as np
 from typing import Tuple
 import os
 
-def get_dataset(name: str, processing: str = "norm") -> Tuple[TensorDataset, TensorDataset]:
+def preprocess(df, preprocess_config):
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
+    from sklearn.utils import resample
     
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler
-    scaler = StandardScaler() if processing == "standard" else MinMaxScaler()
-    dtype = torch.float32
-    seed = 42
+    seed_split = 42
+    seed_resample = 42
+
+    resample_value = preprocess_config['resample']
+    if resample_value < 1:
+        df = resample(df, n_samples=int(df.shape[0] * resample_value), random_state=seed_resample, stratify=df['Potability'])
+    elif resample_value > 1:
+        df = resample(df, n_samples=int(resample_value), random_state=seed_resample, stratify=df['Potability'])
+
+    # Define features and target
+    X = df.drop('Potability', axis=1).values
+    y = df['Potability'].values
+
+    # Split data into training and testing
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed_split, stratify=df['Potability'])
+
+    if preprocess_config['scaler'] == "MinMax":
+        scaler = MinMaxScaler()
+    elif preprocess_config['scaler'] == "Standard":
+        scaler = StandardScaler()
+    scaler.fit(X_train)
+    X_train = scaler.transform(X_train)
+    X_test = scaler.transform(X_test)
+    
+    old_shape = X_train.shape
+    poly = PolynomialFeatures(preprocess_config['poly_features_degree'])
+    poly.fit(X_train)
+    X_train = poly.transform(X_train)
+    X_test = poly.transform(X_test)
+    print(f"Polynomial Features of degree {preprocess_config['poly_features_degree']}. \nData from shape {old_shape} to shape {X_train.shape}.")
+
+    return X_train, X_test, y_train, y_test
+
+def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
+    name: str = kwargs['name']
+    binary_loss: bool = kwargs['binary']
+    preprocess_config: dict = kwargs['preprocess_config']
+   
+
+
+    dtype_in = torch.float32
+    dtype_out = torch.float32 if binary_loss else torch.long
+  
 
     if name == "water":
         
@@ -25,19 +66,11 @@ def get_dataset(name: str, processing: str = "norm") -> Tuple[TensorDataset, Ten
         df['ph'] = df['ph'].fillna(value=df['ph'].median())
         df['Sulfate'] = df['Sulfate'].fillna(value=df['Sulfate'].median())
         df['Trihalomethanes'] = df['Trihalomethanes'].fillna(value=df['Trihalomethanes'].median())
-        
-        X = df.drop('Potability',axis=1).values
-        y = df['Potability'].values
 
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=seed)
-
-        scaler.fit(X_train)
+        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config)
         
-        X_train = scaler.transform(X_train)
-        X_test = scaler.transform(X_test)
-        
-        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype), torch.tensor(y_train,dtype=torch.long))
-        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype), torch.tensor(y_test, dtype=torch.long))
+        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
+        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
         
         return train_set, test_set
     
