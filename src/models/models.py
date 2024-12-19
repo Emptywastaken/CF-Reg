@@ -47,12 +47,12 @@ class BLogisticRegression(nn.Module):
         output = self.forward(data)  # Shape: [batch_size, 1]
 
         # Extract the model's parameters (weights and bias)
-        weights = self.linear.weight.detach()  # Shape: [1, input_dim]
+        weights = self.linear.weight  # Shape: [1, input_dim]
         #bias = self.linear.bias.detach()  # Shape: [1]
 
         return {
-            "output": output.detach(),  # Raw model outputs
-            "gradient": weights.detach(),  # Model's gradients w.r.t input are the weights
+            "output": output,  # Raw model outputs
+            "gradient": weights,  # Model's gradients w.r.t input are the weights
             "linearized": self,  # Linearized representation of the model
         }
         #TODO define a linearize function that linearize the metod at some datapoints, since LogisticRegression is linear, it doesn't do anything but agrees to the same output

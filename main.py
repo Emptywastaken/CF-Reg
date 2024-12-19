@@ -48,7 +48,7 @@ def main(cfg: DictConfig) -> None:
     def train():
         
         with wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)  as run: 
-
+            #print("wandb.config: ", wandb.config)
             merge_hydra_wandb(cfg, wandb.config)
             log_params(cfg)
             set_run_name(cfg, run)
@@ -92,7 +92,7 @@ def main(cfg: DictConfig) -> None:
             model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": train_data.shape[1], "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
  
             estimator = SCFEEstimator(function=model, **cfg.estimator)      #TODO get_estimator function needs to be created in order to hide the estimator type
-            criterion = get_loss(**(OmegaConf.to_container(cfg.loss, resolve=True) | {"estimator": estimator}))
+            criterion = get_loss(**cfg.loss)
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
             
             clf =  LightningClassifier(model=model, 

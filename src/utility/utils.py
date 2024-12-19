@@ -7,13 +7,40 @@ def merge_dict(dict_1: dict | DictConfig, dict_2: dict):
 
     dict_1.update({key: dict_2[key] for key in dict_1 if key in dict_2})
 
-def merge_hydra_wandb(cfg, wandb):
+#def merge_hydra_wandb(cfg, wandb):
     
-    for k, v in cfg.items():
-        if type(v) == DictConfig:
-              
-            merge_dict(v, wandb)
-    
+#    for k, v in cfg.items():
+
+def merge_hydra_wandb(dict1, dict2):
+    """
+    Merge dict2 into dict1 based on the provided rules.
+    """
+    for key, value in dict2.items():
+        if key in dict1:
+            if isinstance(dict1[key], dict | DictConfig) and isinstance(value, dict | DictConfig):
+                # Both values are dictionaries; merge recursively
+                merge_hydra_wandb(dict1[key], value)
+            else:
+                # Override the value in dict1 with the value from dict2
+                dict1[key] = value
+        else:
+            if isinstance(value, dict| DictConfig):
+                # Check if any subkey in dict2[key] is a key in dict1
+                for subkey in value:
+                    if subkey in dict1:
+                        if isinstance(dict1[subkey], dict| DictConfig):
+                            # Merge sub-dictionary
+                            merge_hydra_wandb(dict1[subkey], value[subkey])
+                        else:
+                            # Override the value in dict1
+                            dict1[subkey] = value[subkey]
+                    else:
+                        # Add the new subkey to dict1
+                        dict1[subkey] = value[subkey]
+            else:
+                # Add the new key-value pair to dict1
+                dict1[key] = value
+    return dict1
     
 
 def read_yaml(filename):

@@ -19,9 +19,9 @@ def get_loss(**kwargs) -> Module:
     elif name == "normal":
         binary: bool = kwargs.pop("binary")
         if binary:
-            return torch.nn.functional.binary_cross_entropy_with_logits
+            return torch.nn.BCEWithLogitsLoss()
         else:
-            return  torch.nn.functional.cross_entropy
+            return  torch.nn.CrossEntropyLoss()
     
     elif name == "scfe_regularization":
         return SCFERegularizationLoss(**kwargs)

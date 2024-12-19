@@ -41,7 +41,15 @@ class LightningClassifier(L.LightningModule):
         if self.show_embedding:
             self.model.layers[-2].register_forward_hook(extract_embeddings_hook)
 
-        
+
+#    def backward(self, loss: torch.Tensor, optimizer: torch.optim.Optimizer, optimizer_idx: int, *args, **kwargs):
+#        super().backward(loss, optimizer, optimizer_idx, *args, **kwargs)
+#        for name, param in self.model.named_parameters():
+#            if param.grad is not None:
+#                print(f"{name}: {param.grad.norm()}")  # Print gradient norm
+#            else:
+#                print(f"{name}: No gradient found")    
+    
     def configure_optimizers(self):
         
         return get_optimizer(params=self.model.parameters(), config=self.optim_config)
@@ -57,8 +65,8 @@ class LightningClassifier(L.LightningModule):
     def on_train_epoch_end(self) -> None:
         
         stage: str = "train"
-  
-        accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
+        with torch.no_grad():
+            accuracy, f1, precision, recall, crossentropy = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
         
     
         log_data = {
@@ -67,7 +75,8 @@ class LightningClassifier(L.LightningModule):
             f"{stage}/accuracy": accuracy,
             f"{stage}/f1-score": f1,
             f"{stage}/precision": precision,
-            f"{stage}/recall": recall
+            f"{stage}/recall": recall,
+            f"{stage}/crossentropy": crossentropy
         }
 
         estimator_log_data = self.estimator.build_log(self.train_estimate, stage)
@@ -86,11 +95,23 @@ class LightningClassifier(L.LightningModule):
         #p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         #if self.counterfactual:
         #    values = values | { "out_cf": out, "target_cf": target_cf}
+       
         estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
-        values: dict = {"input": output, "target": target, "data": data}
+        values: dict = {"input": output, "target": target, "estimate": estimate}
+
+        forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
+        values = {key: value for key,value in values.items() if key in forward_signature}
+
 
         torch.set_grad_enabled(mode=True)
-        loss = self.criterion(**values)        
+        loss = self.criterion(**values)       
+        print("batch_idx:", batch_idx)
+        for name, param in self.model.named_parameters():
+            if param.grad is not None:
+                print(f"{name}: {param.grad.norm()}")
+            else:
+                print(f"{name}: No gradient found")
+      
         self.train_target += target.tolist()
         self.train_output += output.tolist()
         self.train_loss += [loss.item()]
@@ -123,7 +144,7 @@ class LightningClassifier(L.LightningModule):
         if self.trainer.state.stage != "sanity_check":
             
             stage: str = "validation"
-            accuracy, f1, precision, recall = self.evaluator.get_complete_evaluation(self.val_output, self.val_target)
+            accuracy, f1, precision, recall, crossentropy = self.evaluator.get_complete_evaluation(self.val_output, self.val_target)
             
             log_data = {
                 f"{stage}/loss": sum(self.val_loss) / len(self.val_loss),
@@ -131,7 +152,8 @@ class LightningClassifier(L.LightningModule):
                 f"{stage}/accuracy": accuracy,
                 f"{stage}/f1-score": f1,
                 f"{stage}/precision": precision,
-                f"{stage}/recall": recall
+                f"{stage}/recall": recall,
+                f"{stage}/crossentropy": crossentropy
             }
 
             estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
@@ -148,7 +170,9 @@ class LightningClassifier(L.LightningModule):
         #out, target_cf = self.estimator.get_counterfactual(data, output, grad=False)
         #p_x = self.estimator.get_estimate(out=out, target=target_cf)
         estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
-        values: dict = {"input": output, "target": target, "data": data}
+        values: dict = {"input": output, "target": target, "estimate": estimate}
+        forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
+        values = {key: value for key,value in values.items() if key in forward_signature}
         #if self.counterfactual:
         #    values = values | { "out_cf": out, "target_cf": target_cf}        
 

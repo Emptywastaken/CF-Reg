@@ -1,10 +1,20 @@
 method: grid
-name: counterfactual_overfitting
+name: WATER_LogReg_SCFE
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  reg_coef:
-    values: [1.0, 0.1]
-  alpha:
-    values: [1,0.5]
+  loss:
+    values:
+      - {type: scfe_regularization, alpha: 0.1}
+      - {type: scfe_regularization, alpha: 0.5}
+      - {type: scfe_regularization, alpha: 1}
+      - {type: normal}
+  estimator:
+    values:
+      - {reg_coef: 0.1}
+      - {reg_coef: 1.0}
+  preprocessor:
+    values:
+      - {poly_features_degree: 5}
+      - {poly_features_degree: 6}

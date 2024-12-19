@@ -43,26 +43,29 @@ class DynamicCounterfactualRegularizationLoss(Module):
         train_loss = self.train_loss(input, target)
         counterfactual_loss = self.counterfactual_loss(out_cf, target_cf)
         predicted_class_cf = torch.argmax(out_cf, dim=1)
-        alpha = (target_cf != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
+        alpha = (target_cf != predicted_class_cf).sum() / torch.numel(predicted_class_cf)   #TODO be aware that this element cannot contribute to a loss function since is detached from the computational graph
         return  train_loss + alpha * counterfactual_loss
     
 class SCFERegularizationLoss(Module):
-    def __init__(self, alpha: float = 0.1, binary: bool = True, estimator: SCFEEstimator = None) -> None:
+    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
         super().__init__()
-        
-        if binary: 
+        self.binary = binary
+        if self.binary: 
             self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
         else:
             self.train_loss = torch.nn.functional.cross_entropy
-        self.estimator = estimator
         self.alpha = alpha
     
 
-    def forward(self, input: torch.Tensor, target: torch.Tensor, data: torch.Tensor):
+    def forward(self, input: torch.Tensor, target: torch.Tensor, estimate: torch.Tensor):
         """ input : model's predictions
             target: true classes
         """
+        assert input.shape[0] == target.shape[0], "Batch size mismatch"
+        if self.binary:
+            assert input.dim() == 1,"Input must be of shape [N C]"
+        else:
+            assert input.dim() == 2, "Input must be of shape [N C]"
+        assert estimate.dim() == 1, "Estimate must be 1D"
         train_loss = self.train_loss(input, target)
-        s = torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu"))
-        estimate = torch.norm(self.estimator.get_estimate(data, s))
-        return train_loss + self.alpha * estimate 
+        return train_loss + self.alpha * torch.mean(estimate) 
