@@ -1,5 +1,5 @@
 import torch
-from src.estimator.montecarlo import MontecarloEstimator
+from src.estimator import Estimator
 import pytorch_lightning as L
 from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
@@ -15,7 +15,7 @@ class LightningClassifier(L.LightningModule):
                  criterion: torch.nn.Module,
                  optim_config: dict,
                  evaluator: ClassifierEvaluator,
-                 estimator: MontecarloEstimator,
+                 estimator: Estimator,
                  counterfactual: bool) -> None:
         
         super().__init__()
@@ -87,7 +87,7 @@ class LightningClassifier(L.LightningModule):
         
         
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
-        
+
         data, target = batch
         output = self.model(data)
         
@@ -95,9 +95,9 @@ class LightningClassifier(L.LightningModule):
         #p_x = self.estimator.counterfactual_probability(out=out, target=target_cf)
         #if self.counterfactual:
         #    values = values | { "out_cf": out, "target_cf": target_cf}
-       
+
         estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
-        values: dict = {"input": output, "target": target, "estimate": estimate}
+        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters()}
 
         forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
         values = {key: value for key,value in values.items() if key in forward_signature}
@@ -105,12 +105,12 @@ class LightningClassifier(L.LightningModule):
 
         torch.set_grad_enabled(mode=True)
         loss = self.criterion(**values)       
-        print("batch_idx:", batch_idx)
-        for name, param in self.model.named_parameters():
-            if param.grad is not None:
-                print(f"{name}: {param.grad.norm()}")
-            else:
-                print(f"{name}: No gradient found")
+        #print("batch_idx:", batch_idx)
+        #for name, param in self.model.named_parameters():
+        #    if param.grad is not None:
+        #        print(f"{name}: {param.grad.norm()}")
+        #    else:
+        #        print(f"{name}: No gradient found")
       
         self.train_target += target.tolist()
         self.train_output += output.tolist()
@@ -164,22 +164,33 @@ class LightningClassifier(L.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         
+  
         data, target = batch
         output = self.model(data)
         #values: dict = {"input": output, "target": target}
         #out, target_cf = self.estimator.get_counterfactual(data, output, grad=False)
         #p_x = self.estimator.get_estimate(out=out, target=target_cf)
-        estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
-        values: dict = {"input": output, "target": target, "estimate": estimate}
+   
+#        old_params = {name: param.clone() for name, param in self.model.named_parameters()}
+        torch.set_grad_enabled(mode=True)
+        estimate = self.estimator.get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))      
+        torch.set_grad_enabled(mode=False)
+        #  new_params = {name: param for name, param in self.model.named_parameters()}
+
+        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters()}
         forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
         values = {key: value for key,value in values.items() if key in forward_signature}
         #if self.counterfactual:
         #    values = values | { "out_cf": out, "target_cf": target_cf}        
-
+     
         val_loss = self.criterion(**values)   
         self.val_target += target.tolist()
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
         self.val_estimate += estimate.tolist()
-        
+#        for name in old_params:
+#            if not torch.equal(old_params[name], new_params[name].data):
+#                print(f"Parameter '{name}' has changed.")
+#            else:
+#                print(f"Parameter '{name}' is unchanged.")
         return val_loss

@@ -48,11 +48,12 @@ def main(cfg: DictConfig) -> None:
     def train():
         
         with wandb.init(project=cfg.logger.project, mode=cfg.logger.mode)  as run: 
+            #print("cfg: ", cfg)
             #print("wandb.config: ", wandb.config)
             merge_hydra_wandb(cfg, wandb.config)
             log_params(cfg)
             set_run_name(cfg, run)
-       
+        
             # To increase performances on CUDA 
             torch.set_float32_matmul_precision('high')
             wandb_logger = WandbLogger(project=cfg.logger.project)

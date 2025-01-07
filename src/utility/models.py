@@ -16,6 +16,13 @@ def get_model(**kwargs) -> torch.nn.Module:
         model = MLP(**config)
         
         return model.to(device)
+
+    elif model_type == "BMLP":
+        from src.models.models import BMLP
+
+        model = BMLP(**config)
+
+        return model.to(device)
     
     elif model_type == "CNN":
         from src.models.models import CNN

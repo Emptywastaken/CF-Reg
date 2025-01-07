@@ -69,3 +69,55 @@ class SCFERegularizationLoss(Module):
         assert estimate.dim() == 1, "Estimate must be 1D"
         train_loss = self.train_loss(input, target)
         return train_loss + self.alpha * torch.mean(estimate) 
+    
+
+class L1CrossEntropy(Module):
+    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
+        super().__init__()
+        self.binary = binary
+        if self.binary: 
+            self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
+        else:
+            self.train_loss = torch.nn.functional.cross_entropy
+        self.alpha = alpha
+    
+
+    def forward(self, input: torch.Tensor, target: torch.Tensor, weights: torch.Tensor):
+        """ input : model's predictions
+            target: true classes
+        """
+        assert input.shape[0] == target.shape[0], "Batch size mismatch"
+        if self.binary:
+            assert input.dim() == 1,"Input must be of shape [N C]"
+        else:
+            assert input.dim() == 2, "Input must be of shape [N C]"
+
+        train_loss = self.train_loss(input, target)
+        l1_reg = sum(param.abs().sum() for param in weights)
+        train_loss += self.alpha * l1_reg
+        return train_loss
+    
+class L2CrossEntropy(Module):
+    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
+        super().__init__()
+        self.binary = binary
+        if self.binary: 
+            self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
+        else:
+            self.train_loss = torch.nn.functional.cross_entropy
+        self.alpha = alpha
+    
+
+    def forward(self, input: torch.Tensor, target: torch.Tensor, weights: torch.Tensor):
+        """ input : model's predictions
+            target: true classes
+        """
+        assert input.shape[0] == target.shape[0], "Batch size mismatch"
+        if self.binary:
+            assert input.dim() == 1,"Input must be of shape [N C]"
+        else:
+            assert input.dim() == 2, "Input must be of shape [N C]"
+
+        train_loss = self.train_loss(input, target)
+        l2_reg = sum(param.pow(2).sum() for param in weights)
+        return train_loss + self.alpha * l2_reg

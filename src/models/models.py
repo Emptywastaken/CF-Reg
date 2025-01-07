@@ -58,6 +58,80 @@ class BLogisticRegression(nn.Module):
         #TODO define a linearize function that linearize the metod at some datapoints, since LogisticRegression is linear, it doesn't do anything but agrees to the same output
         #       of MLP.linearize
 
+class BMLP(nn.Module):
+    def __init__(self, **kwargs):
+        super(BMLP, self).__init__()
+        self.layers = nn.ModuleList()
+        self.use_dropout = kwargs["dropout"] > 0.0
+        self.apply_softmax = kwargs.get("apply_softmax", False)  # Optional parameter
+        
+        # Create the first layer from the input dimension to the first hidden layer size
+        current_dim = kwargs["input_dim"]
+        for hidden_dim in kwargs["hidden_layers"]:
+            self.layers.append(nn.Linear(current_dim, hidden_dim))
+            if self.use_dropout:
+                self.layers.append(nn.Dropout(kwargs["dropout"]))
+            current_dim = hidden_dim
+        
+        # Output layer
+        self.layers.append(nn.Linear(current_dim, 1))
+
+    def forward(self, x: torch.Tensor):
+        # Apply a ReLU activation function and dropout (if used) to each hidden layer
+        for layer in self.layers[:-1]:
+            x = layer(x)
+            if isinstance(layer, nn.Linear):
+                x = F.relu(x)
+
+        # Output layer
+        x = self.layers[-1](x).squeeze(1)
+        
+        # Apply softmax if required
+        if self.apply_softmax:
+            x = F.softmax(x, dim=-1)
+        
+        return x
+
+    def linearize(self, x: torch.Tensor):
+        """
+        Computes the first-order Taylor expansion of the MLP for each element in a batch.
+
+        Args:
+            x (torch.Tensor): A batch of input tensors of shape [batch_size, input_dim].
+
+        Returns:
+            dict: A dictionary containing:
+                - 'output': The output of the MLP for the batch, shape [batch_size, nclasses].
+                - 'gradient': The gradient of the output w.r.t. the input, shape [batch_size, nclasses, input_dim].
+                - 'linearized': The linearized approximation for each input in the batch, shape [batch_size, nclasses].
+        """
+    
+        # Ensure gradients are tracked for the input
+        x.requires_grad_(True)
+
+        # Compute the forward pass
+        output = self.forward(x)  # Shape: [batch_size, 1]
+        #assert output.requires_grad #"Output tensor does not require gradients."
+        # Compute the gradient of the output w.r.t. the input
+        gradients = torch.autograd.grad(
+            outputs=output,  # The output tensor
+            inputs=x,        # The input tensor to differentiate with respect to
+            grad_outputs=torch.ones_like(output),  # Gradient of the outputs
+            create_graph=True,  # Keep computation graph for higher-order gradients
+            retain_graph=True,  # Retain graph for repeated backward calls
+        )[0]  # Shape: [batch_size, input_dim]
+
+        # Compute the linearized approximation using Taylor expansion
+        # Here we approximate the behavior of the model locally around x
+        linearized_output = None  # it should be a function TODO
+
+        return {
+            "output": output,  # Original outputs
+            "gradient": gradients,  # Gradients of the output w.r.t. the input
+            "linearized": linearized_output,  # First-order approximation
+        }
+    
+
 class MLP(nn.Module):
     def __init__(self, **kwargs):
         super(MLP, self).__init__()
@@ -105,39 +179,42 @@ class MLP(nn.Module):
                 - 'gradient': The gradient of the output w.r.t. the input, shape [batch_size, nclasses, input_dim].
                 - 'linearized': The linearized approximation for each input in the batch, shape [batch_size, nclasses].
         """
-        # Ensure gradients are tracked for the input
-        x.requires_grad_(True)
+        print("Da implementare")
+        exit()
+        #    # Ensure gradients are tracked for the input
+        #    x.requires_grad_(True)
 
-        # Compute the forward pass and optionally apply softmax
-        def forward_single_input(x_single):
-            logits = self.forward(x_single.unsqueeze(0)).squeeze(0)
-            if self.apply_softmax:
-                return F.softmax(logits, dim=-1)  # Apply softmax to logits
-            return logits  # Raw logits if softmax is not applied
+        #    # Compute the forward pass and optionally apply softmax
+        #    def forward_single_input(x_single):
+        #        logits = self.forward(x_single.unsqueeze(0)).squeeze(0)
+        #        if self.apply_softmax:
+        #            return F.softmax(logits, dim=-1)  # Apply softmax to logits
+        #        return logits  # Raw logits if softmax is not applied
 
-        # Compute the Jacobian for each input in the batch
-        # Shape of jacobian: [batch_size, nclasses, input_dim]
-        jacobian = torch.autograd.functional.jacobian(
-            forward_single_input, x, create_graph=True
-        )
+        #    # Compute the Jacobian for each input in the batch
+        #    # Shape of jacobian: [batch_size, nclasses, input_dim]
+        #    jacobian = torch.autograd.functional.jacobian(
+        #        forward_single_input, x, create_graph=True
+        #    )
 
-        # Compute the forward pass
-        output = self.forward(x)  # Shape: [batch_size, nclasses]
+        #    # Compute the forward pass
+        #    output = self.forward(x)  # Shape: [batch_size, nclasses]
 
-        # Apply softmax to the output if needed
-        if self.apply_softmax:
-            output = F.softmax(output, dim=-1)
+        #    # Apply softmax to the output if needed
+        #    if self.apply_softmax:
+        #        output = F.softmax(output, dim=-1)
 
-        # Compute the linearized approximation
-        # Delta x: perturbation around the input
-        delta_x = x - x.detach()
-        linearized_approximation = output + torch.einsum("bki,bi->bk", jacobian, delta_x)   #TODO this line contains an error
+        #    # Compute the linearized approximation
+        #    # Delta x: perturbation around the input
+        #    delta_x = x - x.detach()
+        #    linearized_approximation = output + torch.einsum("bki,bi->bk", jacobian, delta_x)   #TODO this line contains an error
 
-        return {
-            "output": output.detach(),  # Original outputs
-            "gradient": jacobian.detach(),  # Gradients for each input-output pair
-            "linearized": linearized_approximation.detach(),  # First-order approximation
-        }
+        #    return {
+        #        "output": output.detach(),  # Original outputs
+        #        "gradient": jacobian.detach(),  # Gradients for each input-output pair
+        #        "linearized": linearized_approximation.detach(),  # First-order approximation
+        #    }
+
 
 def extract_embeddings_hook(module, input, output):
     

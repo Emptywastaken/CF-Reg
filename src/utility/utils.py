@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from omegaconf import DictConfig, DictKeyType
+from omegaconf import DictConfig, DictKeyType, OmegaConf
 import yaml
 
 
@@ -15,6 +15,7 @@ def merge_hydra_wandb(dict1, dict2):
     """
     Merge dict2 into dict1 based on the provided rules.
     """
+    OmegaConf.set_struct(dict1, False)
     for key, value in dict2.items():
         if key in dict1:
             if isinstance(dict1[key], dict | DictConfig) and isinstance(value, dict | DictConfig):
@@ -39,7 +40,9 @@ def merge_hydra_wandb(dict1, dict2):
                         dict1[subkey] = value[subkey]
             else:
                 # Add the new key-value pair to dict1
+                print(key, value)
                 dict1[key] = value
+    OmegaConf.set_struct(dict1, True)
     return dict1
     
 

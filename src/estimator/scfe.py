@@ -50,7 +50,17 @@ class SCFEEstimator(Estimator):
         w = w.expand(m.shape[0], -1)
         w_norm_squared = torch.norm(w, p=2, dim=1) ** 2 # [batch_size], ∥w∥²
 
+        #print("w.shape: ", w.shape)
+        #print("s.shape: ", s.shape)
+        #print("output.shape: ", output.shape)
+        #print("m.shape: ", m.shape)
+        #print("w_norm_squared.shape: ", w_norm_squared.shape)
+        #print("w.shape", w.shape)
+        #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape)
+        #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1).shape)
+
         delta_scfe = (m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1) * w  # [batch_size, input_dim]
+        #print("delta_scfe.shape: ", delta_scfe.shape)
         norm_delta_scfe = torch.norm(delta_scfe, p=2, dim=1)
 
         return norm_delta_scfe
