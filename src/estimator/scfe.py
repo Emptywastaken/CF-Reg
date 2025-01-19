@@ -47,9 +47,15 @@ class SCFEEstimator(Estimator):
         m = s - output  # Use the first class residual for simplification, shape [batch_size]
 
         # Step 4: Apply the Sherman-Morrison formula for δ*_SCFE
-        w = w.expand(m.shape[0], -1)
-        w_norm_squared = torch.norm(w, p=2, dim=1) ** 2 # [batch_size], ∥w∥²
+        #w = w.expand(m.shape[0], -1)
 
+        # Determine the dimensions to reduce over (all except the batch dimension)
+        reduce_dims = tuple(range(1, w.ndim))
+
+        # Compute the squared l2 norm of the gradients for each datapoint in the batch
+        w_norm_squared = torch.norm(w, p=2, dim=reduce_dims) ** 2  # [batch_size], ∥w∥²
+    
+    
         #print("w.shape: ", w.shape)
         #print("s.shape: ", s.shape)
         #print("output.shape: ", output.shape)
@@ -57,11 +63,11 @@ class SCFEEstimator(Estimator):
         #print("w_norm_squared.shape: ", w_norm_squared.shape)
         #print("w.shape", w.shape)
         #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape)
-        #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1).shape)
+        #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))).shape)
 
-        delta_scfe = (m * self.reg_coef / (self.reg_coef + w_norm_squared)).unsqueeze(1) * w  # [batch_size, input_dim]
+        delta_scfe = (m * self.reg_coef / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))) * w  # [batch_size, input_dim]
         #print("delta_scfe.shape: ", delta_scfe.shape)
-        norm_delta_scfe = torch.norm(delta_scfe, p=2, dim=1)
+        norm_delta_scfe = torch.norm(delta_scfe, p=2, dim=reduce_dims)
 
         return norm_delta_scfe
 

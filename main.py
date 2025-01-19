@@ -73,7 +73,7 @@ def main(cfg: DictConfig) -> None:
             # Extract the tensors from the trainset and testset
             train_data, train_targets = trainset[:][0], trainset[:][1]
             test_data, test_targets = testset[:][0], testset[:][1]
-
+            print("train_data.shape: ", train_data.shape)
             # Apply PolynomialFeatures to the dataset
             #poly = PolynomialFeatures(degree=cfg.data.poly_degree)
 
@@ -90,8 +90,8 @@ def main(cfg: DictConfig) -> None:
           
 
 
-            model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": train_data.shape[1], "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
- 
+            model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": train_data.shape, "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
+          
             estimator = SCFEEstimator(function=model, **cfg.estimator)      #TODO get_estimator function needs to be created in order to hide the estimator type
             criterion = get_loss(**cfg.loss)
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)

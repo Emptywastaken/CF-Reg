@@ -8,16 +8,18 @@ import os
 
 def preprocess(df, preprocess_config):
     from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
-    from sklearn.utils import resample
+    from sklearn.utils import resample, shuffle
     
     seed_split = 42
     seed_resample = 42
 
     resample_value = preprocess_config['resample']
     if resample_value < 1:
-        df = resample(df, n_samples=int(df.shape[0] * resample_value), random_state=seed_resample, stratify=df['Potability'])
+        df = resample(df, n_samples=int(df.shape[0] * resample_value), random_state=seed_resample, stratify=df['Potability'], replace=False)
     elif resample_value > 1:
-        df = resample(df, n_samples=int(resample_value), random_state=seed_resample, stratify=df['Potability'])
+        df = resample(df, n_samples=int(resample_value), random_state=seed_resample, stratify=df['Potability'], replace=False)
+    else:
+        df = shuffle(df, random_state=seed_resample)
 
     # Define features and target
     X = df.drop('Potability', axis=1).values
@@ -34,6 +36,7 @@ def preprocess(df, preprocess_config):
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
     
+    #if (preprocess_config['poly_features_degree'] != 1):
     old_shape = X_train.shape
     poly = PolynomialFeatures(preprocess_config['poly_features_degree'])
     poly.fit(X_train)
@@ -77,6 +80,8 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
     elif name == "mnist":
         from torchvision import datasets
         from torchvision import transforms
+
+
         
         training_data =   datasets.MNIST("data", train=True, download=True,
                              transform= transforms.Compose([
@@ -92,8 +97,32 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
                                  (0.1307,), (0.3081,))
                              ]))
         
-        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
-        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+        if binary_loss:
+            # Select only instances belonging to classes 4 and 7
+            train_mask = (training_data.targets == 4) | (training_data.targets == 7)
+            test_mask = (test_data.targets == 4) | (test_data.targets == 7)
+
+            training_data.data = training_data.data[train_mask]
+            training_data.targets = training_data.targets[train_mask]
+            test_data.data = test_data.data[test_mask]
+            test_data.targets = test_data.targets[test_mask]
+
+            # Relabel classes 4 -> 0 and 7 -> 1
+            training_data.targets = (training_data.targets == 7).long()
+            test_data.targets = (test_data.targets == 7).long()
+            
+
+        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), torch.tensor(training_data.targets, dtype= dtype_out))
+        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), torch.tensor(test_data.targets, dtype= dtype_out))
+
+        #Print some data information
+        labels = test_set.tensors[1]
+        unique_classes, counts = torch.unique(labels, return_counts=True)
+        total_samples = len(labels)
+        proportions = counts / total_samples
+
+        for cls, count, prop in zip(unique_classes, counts, proportions):
+            print(f"Class {cls.item()}: Count = {count.item()}, Proportion = {prop.item():.2%}")
 
         return train_set, test_set
     

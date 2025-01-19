@@ -6,12 +6,10 @@ metric:
 parameters:
   loss:
     values:
-      - {type: scfe_regularization, alpha: 0.001}
-      - {type: scfe_regularization, alpha: 0.1}
-      - {type: scfe_regularization, alpha: 0.5}
-      - {type: scfe_regularization, alpha: 1}
-      - {type: normal}
-      - {type: l1normal, alpha: 0.001}
+      - {type: scfe_regularization, alpha: -0.1}
+      - {type: scfe_regularization, alpha: -0.5}
+      - {type: scfe_regularization, alpha: -1}
+      - {type: normal, alpha: 0.00001}
       - {type: l1normal, alpha: 0.1}
       - {type: l1normal, alpha: 0.5}
       - {type: l1normal, alpha: 1}
@@ -25,9 +23,7 @@ parameters:
   model:
     values:
       - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 0.0, single_output: True}
-      - {model_type: BMLP, hidden_layers: [10, 3], dropout: 0.0, single_output: True}
-      - {model_type: LogisticRegression}
+      - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
-      - {poly_features_degree: 5, resample: 1}
-      - {poly_features_degree: 6, resample: 1}
+      - {poly_features_degree: 1, resample: 1}

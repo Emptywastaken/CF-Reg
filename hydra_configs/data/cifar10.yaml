@@ -2,3 +2,4 @@ name: cifar10
 nclasses: 10
 input_dim: [32, 32]
 channel_in: 3
+make_binary: False #If True only two classes are selected, others are dropped

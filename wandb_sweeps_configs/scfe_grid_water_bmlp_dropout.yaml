@@ -1,0 +1,20 @@
+method: grid
+name: WATER_LogReg_SCFE
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss:
+    values:
+      - {type: normal}
+  model:
+    values:
+      - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 1.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [10, 3], dropout: 1.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 0.75, single_output: True}
+      - {model_type: BMLP, hidden_layers: [10, 3], dropout: 0.75, single_output: True}
+      - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 0.5, single_output: True}
+      - {model_type: BMLP, hidden_layers: [10, 3], dropout: 0.5, single_output: True}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}

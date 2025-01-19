@@ -2,3 +2,4 @@ name: mnist
 nclasses: 10
 input_dim: [28, 28]
 channel_in: 1
+make_binary: True #If True only two classes are selected, others are dropped

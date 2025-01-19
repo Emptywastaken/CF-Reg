@@ -67,6 +67,8 @@ class SCFERegularizationLoss(Module):
         else:
             assert input.dim() == 2, "Input must be of shape [N C]"
         assert estimate.dim() == 1, "Estimate must be 1D"
+        #print("input.dtype: ", input.dtype)
+        #print("target.dtype: ", target.dtype)
         train_loss = self.train_loss(input, target)
         return train_loss + self.alpha * torch.mean(estimate) 
     

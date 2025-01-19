@@ -258,6 +258,82 @@ class CNN(nn.Module):
         out = (edge + 2 * padding - dilation * (kernel_size - 1) - 1) // stride + 1
         return out
     
+class BCNN(nn.Module):
+    
+    def __init__(self, dimension_input: int, classes: int, channel_input: int, channel_list: list[int], kernel_list: list[int]):
+        super(BCNN, self).__init__()
+        self.shapes: list[int] = []
+        self.layers: nn.ModuleList = nn.ModuleList()
+        current_channel = channel_input
+        
+        for channels, kernel in zip(channel_list, kernel_list):
+            self.layers.append(nn.Conv2d(in_channels=current_channel, out_channels=channels, kernel_size=kernel))
+            self.shapes.append(self.output_shape(edge=dimension_input, kernel_size=kernel))
+            dimension_input = self.shapes[-1]
+            self.layers.append(nn.MaxPool2d(kernel_size=2))
+            self.shapes.append(self.output_shape(edge=dimension_input, kernel_size=2, stride=2))
+            current_channel = channels
+            dimension_input = self.shapes[-1]
+            
+        self.layers.append(nn.Linear(channel_list[-1]*self.shapes[-1]*self.shapes[-1], 1))
+
+
+    def forward(self, x: torch.Tensor):
+        
+        for layer in self.layers[:-1]:
+            x = layer(x)
+            
+            if isinstance(layer, nn.MaxPool2d):
+                x = F.relu(x)
+                
+        x = torch.flatten(x, start_dim=1)
+        x = self.layers[-1](x).squeeze(1)
+        return x
+    
+    def linearize(self, x: torch.Tensor):
+        """
+        Computes the first-order Taylor expansion of the MLP for each element in a batch.
+
+        Args:
+            x (torch.Tensor): A batch of input tensors of shape [batch_size, input_dim].
+
+        Returns:
+            dict: A dictionary containing:
+                - 'output': The output of the MLP for the batch, shape [batch_size, nclasses].
+                - 'gradient': The gradient of the output w.r.t. the input, shape [batch_size, nclasses, input_dim].
+                - 'linearized': The linearized approximation for each input in the batch, shape [batch_size, nclasses].
+        """
+    
+        # Ensure gradients are tracked for the input
+        x.requires_grad_(True)
+
+        # Compute the forward pass
+        output = self.forward(x)  # Shape: [batch_size, 1]
+        #assert output.requires_grad #"Output tensor does not require gradients."
+        # Compute the gradient of the output w.r.t. the input
+        gradients = torch.autograd.grad(
+            outputs=output,  # The output tensor
+            inputs=x,        # The input tensor to differentiate with respect to
+            grad_outputs=torch.ones_like(output),  # Gradient of the outputs
+            create_graph=True,  # Keep computation graph for higher-order gradients
+            retain_graph=True,  # Retain graph for repeated backward calls
+        )[0]  # Shape: [batch_size, input_dim]
+        
+        # Compute the linearized approximation using Taylor expansion
+        # Here we approximate the behavior of the model locally around x
+        linearized_output = None  # it should be a function TODO
+
+        return {
+            "output": output,  # Original outputs
+            "gradient": gradients,  # Gradients of the output w.r.t. the input
+            "linearized": linearized_output,  # First-order approximation
+        }
+    
+    def output_shape(self, edge: int, kernel_size: int = 1, stride: int = 1, padding: int = 0, dilation: int = 1) -> int:
+        
+        out = (edge + 2 * padding - dilation * (kernel_size - 1) - 1) // stride + 1
+        return out
+    
 
 
 class NoiseModule(nn.Module):
