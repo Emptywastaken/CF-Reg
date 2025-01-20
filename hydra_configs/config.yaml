@@ -4,7 +4,7 @@ defaults:
   - loss: scfe_regularization
   - model: bcnn    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: mnist
+  - data: cifar10
   - trainer: trainer_default
   - optimizer: sgd
   - estimator: scfe

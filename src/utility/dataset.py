@@ -145,8 +145,34 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
                                  (0.1307,), (0.3081,))
                              ]))
         
-        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1), training_data.targets)
-        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1), test_data.targets)
+        if binary_loss:
+            # Use only sandals and sneakers
+            train_mask = (training_data.targets == 5) | (training_data.targets == 7)
+            test_mask = (test_data.targets == 5) | (test_data.targets == 7)
+
+            training_data.data = training_data.data[train_mask]
+            training_data.targets = training_data.targets[train_mask]
+            test_data.data = test_data.data[test_mask]
+            test_data.targets = test_data.targets[test_mask]
+
+            # Relabel classes `5` -> 0 and `7` -> 1
+            training_data.targets = (training_data.targets == 7).long()
+            test_data.targets = (test_data.targets == 7).long()
+
+        # Create TensorDataset
+        train_set = TensorDataset(training_data.data.type(torch.float).unsqueeze(1),
+                                torch.tensor(training_data.targets, dtype=dtype_out))
+        test_set = TensorDataset(test_data.data.type(torch.float).unsqueeze(1),
+                                torch.tensor(test_data.targets, dtype=dtype_out))
+
+        # Print some data information
+        labels = test_set.tensors[1]
+        unique_classes, counts = torch.unique(labels, return_counts=True)
+        total_samples = len(labels)
+        proportions = counts / total_samples
+
+        for cls, count, prop in zip(unique_classes, counts, proportions):
+            print(f"Class {cls.item()}: Count = {count.item()}, Proportion = {prop.item():.2%}")
 
         return train_set, test_set
     
@@ -158,11 +184,50 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         training_data =   datasets.CIFAR10("data", train=True, download=True)
 
         test_data = datasets.CIFAR10('data', train=False, download=True)
-        
-        train_set = TensorDataset(torch.Tensor(training_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(training_data.targets).type(torch.uint8))
-        test_set = TensorDataset(torch.from_numpy(test_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(test_data.targets).type(torch.uint8))
+        if binary_loss:
+            # Select only instances belonging to classes `3` and `5` (cat and dogs)
+            train_mask = (torch.tensor(training_data.targets) == 3) | (torch.tensor(training_data.targets) == 5)
+            test_mask = (torch.tensor(test_data.targets) == 3) | (torch.tensor(test_data.targets) == 5)
+
+            training_data.data = training_data.data[train_mask.numpy()]
+            training_data.targets = torch.tensor(training_data.targets)[train_mask].numpy()
+            test_data.data = test_data.data[test_mask.numpy()]
+            test_data.targets = torch.tensor(test_data.targets)[test_mask].numpy()
+
+            # Relabel classes `3` -> 0 and `5` -> 1
+            training_data.targets = (np.array(training_data.targets) == 5).astype(np.uint8)
+            test_data.targets = (np.array(test_data.targets) == 5).astype(np.uint8)
+
+        # Normalize the data (and rearranges)
+        transform = transforms.Compose([
+            transforms.ToTensor(),
+            transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))  # CIFAR-10 normalization values
+        ])
+
+        train_data_tensor = torch.stack([transform(img) for img in training_data.data])
+        test_data_tensor = torch.stack([transform(img) for img in test_data.data])
+
+        # Create TensorDataset
+        train_set = TensorDataset(train_data_tensor,
+                                torch.tensor(training_data.targets, dtype=dtype_out))
+        test_set = TensorDataset(test_data_tensor,
+                                torch.tensor(test_data.targets, dtype=dtype_out))
+
+        # Print some data information
+        labels = torch.tensor(test_data.targets, dtype=dtype_out)
+        unique_classes, counts = torch.unique(labels, return_counts=True)
+        total_samples = len(labels)
+        proportions = counts / total_samples
+
+        for cls, count, prop in zip(unique_classes, counts, proportions):
+            print(f"Class {cls.item()}: Count = {count.item()}, Proportion = {prop.item():.2%}")
 
         return train_set, test_set
+    
+        #train_set = TensorDataset(torch.Tensor(training_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(training_data.targets).type(torch.uint8))
+        #test_set = TensorDataset(torch.from_numpy(test_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(test_data.targets).type(torch.uint8))
+
+        #return train_set, test_set
         
         
     else:
