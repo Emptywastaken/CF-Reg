@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Tuple
 from src.estimator import MontecarloEstimator, SCFEEstimator
 from src.trainer import LightningClassifier
-from src.utility import get_dataset, get_model, get_loss, merge_hydra_wandb, ClassifierEvaluator, read_yaml
+from src.utility import get_dataset, get_model, get_loss, get_estimator, merge_hydra_wandb, ClassifierEvaluator, read_yaml
 import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -91,8 +91,9 @@ def main(cfg: DictConfig) -> None:
 
 
             model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": train_data.shape, "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
-          
-            estimator = SCFEEstimator(function=model, **cfg.estimator)      #TODO get_estimator function needs to be created in order to hide the estimator type
+            estimator = get_estimator(**(OmegaConf.to_container(cfg.estimator) | {"function" : model, "train_set" : trainset}))
+            print("type(estimator): ", type(estimator))
+
             criterion = get_loss(**cfg.loss)
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
             

@@ -25,6 +25,13 @@ def merge_hydra_wandb(dict1, dict2):
                 # Override the value in dict1 with the value from dict2
                 dict1[key] = value
         else:
+            if "." in key:
+                path = key.split('.')
+                t = dict1
+                for p in path[:-1]:
+                    t = t[p]
+                t[path[-1]] = value
+                continue
             if isinstance(value, dict| DictConfig):
                 # Check if any subkey in dict2[key] is a key in dict1
                 for subkey in value:

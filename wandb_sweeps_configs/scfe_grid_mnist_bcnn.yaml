@@ -18,8 +18,8 @@ parameters:
       - {type: l2normal, alpha: 1}
   estimator:
     values:
-      - {reg_coef: 0.1}
-      - {reg_coef: 1.0}
+      - {type: scfe, reg_coef: 0.1}
+      - {type: scfe, reg_coef: 1.0}
   model:
     values:
       - {model_type: BCNN, channel_list: [5, 10, 20], kernel_list: [3, 3, 3]}

@@ -12,7 +12,10 @@ class SCFEEstimator(Estimator):
         self.function = function
         self.reg_coef = reg_coef
 
-    def get_estimate(self, data: Tensor, s: Tensor) -> Tensor:
+    def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
+        return self._get_estimate(data, s=torch.zeros(data.shape[0], device=torch.device("cuda" if torch.cuda.is_available() else "cpu")))
+
+    def _get_estimate(self, data: Tensor, s: Tensor) -> Tensor:
         if len(s.shape) == 1:
             # Simplified binary classification case
             return self._get_estimate_binary(data, s)  # Pass single target score for both classes

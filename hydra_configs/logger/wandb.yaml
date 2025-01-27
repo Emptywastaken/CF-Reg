@@ -2,4 +2,4 @@
 name: ${name}
 project: ${project}
 mode: offline
-config: scfe_grid_mnist_bcnn
+config: scfe_bayes_bmlp

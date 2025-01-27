@@ -76,29 +76,52 @@ class MontecarloEstimator(Estimator):
         unit_dims: Tuple[int, ...] = (1, ) 
         new_shape: Tuple[int, ...] = (self.n_samples, *unit_dims, *self.shape)
         perturbation: Tensor = self.perturbation.view(new_shape)
+        #print("perturbation.shape: ", perturbation.shape)
         repeat_dims: Tuple[int, ...] = (1, batch_size, *((1, )*len(new_shape[2:])))
-        perturbation: Tensor = perturbation.repeat(repeat_dims)       
+        perturbation: Tensor = perturbation.repeat(repeat_dims)      
+        #print("perturbation.shape: ", perturbation.shape) 
         data: Tensor = data.to(device=self.device) 
         sample_perturbed: Tensor = data + perturbation 
+        #print("sample_perturbed.shape: ", sample_perturbed.shape)
         batch_dims: Tuple[int, ...] = (-1, *new_shape[2:])
         sample_perturbed: Tensor = sample_perturbed.reshape(batch_dims)
+        #print("sample_perturbed.shape: ", sample_perturbed.shape)
         out: Tensor = self.function(sample_perturbed)
-        target: Tensor = torch.argmax(target, dim=-1)
+        #print("out.shape: ", out.shape)
+        out = out.view(self.n_samples, batch_size).transpose(0, 1)
+        #print("out.shape: ", out.shape)
+        #print("target.shape: ", target.shape, len(target.shape))
+        if len(target.shape) == 2:
+            target: Tensor = torch.argmax(target, dim=-1)
+        else: 
+            target: Tensor = (target > 0).int()
+        #print("target.shape: ", target.shape)
         target: Tensor = target.unsqueeze(1)
+        #print("target.shape: ", target.shape)
         target: Tensor = target.repeat(1, self.n_samples)
-        target: Tensor = target.reshape(batch_size * self.n_samples)
+        #print("target.shape: ", target.shape)
+        #target: Tensor = target.reshape(batch_size * self.n_samples)
+        #print("target.shape: ", target.shape)
         target: Tensor = target.to(self.device)
-        
-        return out, target
+        #print("target.shape: ", target.shape)
+        return out, target #[batch_size, n_sample]
     
-    def get_estimate(self, out: Tensor, target: Tensor) -> Tensor:
+    def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
+        out, target_cf = self.get_counterfactual(data, output, grad=False)
+        return self._get_estimate(out=out, target=target_cf)
+
+    def _get_estimate(self, out: Tensor, target: Tensor) -> Tensor:
         """
         Returns:
             torch.Tensor
         """
-        predicted_class_cf = torch.argmax(out, dim=1)
-        cf_fraction = (target != predicted_class_cf).sum() / torch.numel(predicted_class_cf)
-        
+        if len(out.shape) == 3:
+            predicted_class_cf = torch.argmax(out, dim=1)
+        elif len(out.shape) == 2:
+            predicted_class_cf = (out > 0).int()
+
+        cf_fraction = (target != predicted_class_cf).sum(dim=1) / predicted_class_cf.shape[1]
+ 
         return torch.tensor(cf_fraction, dtype=torch.float32)
     
     def get_estimate_name(self) -> str:
@@ -106,4 +129,27 @@ class MontecarloEstimator(Estimator):
         Implementation of get_estimate_name abstract method.
         """
         return "p_x"
+    
+    def build_log(self, values, stage):
+        import numpy as np
+
+        # Calculate the required statistics
+        max_value = max(values)
+        mean_value = np.mean(values)
+        first_quartile = np.percentile(values, 25)
+        third_quartile = np.percentile(values, 75)
+        median_value = np.median(values)
+        min_value = min(values)
+
+        # Construct the dictionary with keys based on `stage` and metrics
+        log_data = {
+            f"{stage}/max p_x$": max_value,
+            f"{stage}/mean p_x$": mean_value,
+            f"{stage}/first_quartile p_x$": first_quartile,
+            f"{stage}/third_quartile p_x$": third_quartile,
+            f"{stage}/median p_x$": median_value,
+            f"{stage}/min p_x$": min_value,
+        }
+
+        return log_data
       
