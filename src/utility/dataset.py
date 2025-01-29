@@ -6,7 +6,7 @@ import numpy as np
 from typing import Tuple
 import os
 
-def preprocess(df, preprocess_config):
+def preprocess(df, preprocess_config, target_name):
     from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
     from sklearn.utils import resample, shuffle
     
@@ -15,18 +15,18 @@ def preprocess(df, preprocess_config):
 
     resample_value = preprocess_config['resample']
     if resample_value < 1:
-        df = resample(df, n_samples=int(df.shape[0] * resample_value), random_state=seed_resample, stratify=df['Potability'], replace=False)
+        df = resample(df, n_samples=int(df.shape[0] * resample_value), random_state=seed_resample, stratify=df[target_name], replace=False)
     elif resample_value > 1:
-        df = resample(df, n_samples=int(resample_value), random_state=seed_resample, stratify=df['Potability'], replace=False)
+        df = resample(df, n_samples=int(resample_value), random_state=seed_resample, stratify=df[target_name], replace=False)
     else:
         df = shuffle(df, random_state=seed_resample)
 
     # Define features and target
-    X = df.drop('Potability', axis=1).values
-    y = df['Potability'].values
+    X = df.drop(target_name, axis=1).values
+    y = df[target_name].values
 
     # Split data into training and testing
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed_split, stratify=df['Potability'])
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed_split, stratify=df[target_name])
 
     if preprocess_config['scaler'] == "MinMax":
         scaler = MinMaxScaler()
@@ -70,7 +70,7 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         df['Sulfate'] = df['Sulfate'].fillna(value=df['Sulfate'].median())
         df['Trihalomethanes'] = df['Trihalomethanes'].fillna(value=df['Trihalomethanes'].median())
 
-        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config)
+        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'Potability')
         
         train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
         test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
@@ -228,14 +228,80 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         #test_set = TensorDataset(torch.from_numpy(test_data.data).type(torch.float16).permute(0,3,1,2), torch.Tensor(test_data.targets).type(torch.uint8))
 
         #return train_set, test_set
+    elif name == "adult":
+
+        # Define file paths
+        train_file = "data/adult/adult.data"
+        test_file = "data/adult/adult.test"
+     
+        # Define column names based on `adult.names`
+        columns = [
+            "age", "workclass", "fnlwgt", "education", "education-num", 
+            "marital-status", "occupation", "relationship", "race", 
+            "sex", "capital-gain", "capital-loss", "hours-per-week", 
+            "native-country", "income"
+        ]       
+
+
+        try:
+            # Load training data
+            train_data = pd.read_csv(train_file, header=None, names=columns, na_values=" ?", skipinitialspace=True)
+
+            # Load test data (test file has an extra line and labels with a dot at the end)
+            test_data = pd.read_csv(test_file, header=None, names=columns, na_values=" ?", skipinitialspace=True, skiprows=1)
+
+            # Combine training and test data for preprocessing, if needed
+            data = pd.concat([train_data, test_data], axis=0)
+            
+        except Exception:
+            
+            raise ValueError(f"Adult dataset is not inside the data folder! cwd {os.getcwd()}")
         
+        # Drop rows with missing values
+        data = data.dropna()
+        # Clean up target variable (remove the trailing period in the test set)
+        data['income'] = data['income'].replace({'<=50K.': '<=50K', '>50K.': '>50K'})
+        # Convert the target ("income") to binary (0 for `<=50K`, 1 for `>50K`)
+        data['income'] = data['income'].apply(lambda x: 1 if x == '>50K' else 0)
+
+        # List of continuous and non-continuous features
+        categorical_features = [
+            'workclass', 'education', 'marital-status', 'occupation', 
+            'relationship', 'race', 'sex', 'native-country'
+        ]
+        continuous_features = ['age', 'fnlwgt', 'education-num', 'capital-gain', 'capital-loss', 'hours-per-week']
+        target_feature = 'income'
+
+        # Apply get_dummies to categorical features
+        data_encoded = pd.get_dummies(data, columns=categorical_features, drop_first=True)
+
+        # Reorder columns: first continuous features, then dummy variables, and finally the target
+        ordered_columns = continuous_features + [col for col in data_encoded.columns if col != target_feature and col not in continuous_features] + [target_feature]
+
+        # Reorder the DataFrame columns according to the desired order
+        data = data_encoded[ordered_columns]
+
+        # Display dataset information after preprocessing
+        print("Preprocessed Dataset Preview:")
+        print(data.columns)
+        print(data.head())
+
+        print("\nDataset Shape:", data.shape)
+
+        X_train, X_test, y_train, y_test = preprocess(data, preprocess_config, 'income')
         
+        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
+        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
+        
+        return train_set, test_set
+
     else:
+        
         raise ValueError(f"Dataset {name} is not available!")
             
     
     
 if __name__ == "__main__":
-    
-    
-    train, test = get_dataset(name="mnist")
+    dummy_param_bin = True
+    dummy_param_param = {'resample': 1, 'poly_features_degree': 1, 'scaler': 'Standard'}
+    train, test = get_dataset(name="adult", binary = dummy_param_bin, preprocess_config = dummy_param_param)
