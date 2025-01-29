@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: offline
-config: scfe_bayes_bmlp
+mode: online
+config: dropout_bayes_bmlp
