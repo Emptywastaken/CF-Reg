@@ -52,6 +52,12 @@ def get_model(**kwargs) -> torch.nn.Module:
         model = BLogisticRegression(** config)
 
         return model.to(device)
+    
+    elif model_type == "BPreActResNet":
+        from src.models.models import BPreActResNet, PreActBlock
+        model = BPreActResNet(PreActBlock, [2,2,2,2], num_classes=1)
+
+        return model.to(device)
     else:
         
         raise ValueError(f"{model_type} is not a valide model type!")

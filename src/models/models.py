@@ -258,6 +258,101 @@ class CNN(nn.Module):
         out = (edge + 2 * padding - dilation * (kernel_size - 1) - 1) // stride + 1
         return out
     
+class PreActBlock(nn.Module):
+    '''Pre-activation version of the BasicBlock.'''
+    expansion = 1
+
+    def __init__(self, in_planes, planes, stride=1):
+        super(PreActBlock, self).__init__()
+        self.bn1 = nn.BatchNorm2d(in_planes)
+        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
+
+        if stride != 1 or in_planes != self.expansion*planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(in_planes, self.expansion*planes, kernel_size=1, stride=stride, bias=False)
+            )
+
+    def forward(self, x):
+        out = F.relu(self.bn1(x))
+        shortcut = self.shortcut(x) if hasattr(self, 'shortcut') else x
+        out = self.conv1(out)
+        out = self.conv2(F.relu(self.bn2(out)))
+        out += shortcut
+        return out
+
+class BPreActResNet(nn.Module):
+    def __init__(self, block, num_blocks, num_classes=10):
+        super(BPreActResNet, self).__init__()
+        self.in_planes = 64
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1, bias=False)
+        self.layer1 = self._make_layer(block, 64, num_blocks[0], stride=1)
+        self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
+        self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
+        self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
+        self.bn = nn.BatchNorm2d(512 * block.expansion)
+        self.linear = nn.Linear(512 * block.expansion, 1)
+
+    def _make_layer(self, block, planes, num_blocks, stride):
+        strides = [stride] + [1]*(num_blocks-1)
+        layers = []
+        for stride in strides:
+            layers.append(block(self.in_planes, planes, stride))
+            self.in_planes = planes * block.expansion
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        out = self.conv1(x)
+        out = self.layer1(out)
+        out = self.layer2(out)
+        out = self.layer3(out)
+        out = self.layer4(out)
+        out = F.relu(self.bn(out))
+        out = F.avg_pool2d(out, 4)
+        out = out.view(out.size(0), -1)
+        out = self.linear(out).squeeze(1)
+        return out
+    
+    def linearize(self, x: torch.Tensor):
+        """
+        Computes the first-order Taylor expansion of the MLP for each element in a batch.
+
+        Args:
+            x (torch.Tensor): A batch of input tensors of shape [batch_size, input_dim].
+
+        Returns:
+            dict: A dictionary containing:
+                - 'output': The output of the MLP for the batch, shape [batch_size, nclasses].
+                - 'gradient': The gradient of the output w.r.t. the input, shape [batch_size, nclasses, input_dim].
+                - 'linearized': The linearized approximation for each input in the batch, shape [batch_size, nclasses].
+        """
+    
+        # Ensure gradients are tracked for the input
+        x.requires_grad_(True)
+
+        # Compute the forward pass
+        output = self.forward(x)  # Shape: [batch_size, 1]
+        #assert output.requires_grad #"Output tensor does not require gradients."
+        # Compute the gradient of the output w.r.t. the input
+        gradients = torch.autograd.grad(
+            outputs=output,  # The output tensor
+            inputs=x,        # The input tensor to differentiate with respect to
+            grad_outputs=torch.ones_like(output),  # Gradient of the outputs
+            create_graph=True,  # Keep computation graph for higher-order gradients
+            retain_graph=True,  # Retain graph for repeated backward calls
+        )[0]  # Shape: [batch_size, input_dim]
+        
+        # Compute the linearized approximation using Taylor expansion
+        # Here we approximate the behavior of the model locally around x
+        linearized_output = None  # it should be a function TODO
+
+        return {
+            "output": output,  # Original outputs
+            "gradient": gradients,  # Gradients of the output w.r.t. the input
+            "linearized": linearized_output,  # First-order approximation
+        }
+
 class BCNN(nn.Module):
     
     def __init__(self, dimension_input: int, classes: int, channel_input: int, channel_list: list[int], kernel_list: list[int]):

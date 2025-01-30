@@ -43,7 +43,8 @@ def preprocess(df, preprocess_config, target_name):
     X_train = poly.transform(X_train)
     X_test = poly.transform(X_test)
     print(f"Polynomial Features of degree {preprocess_config['poly_features_degree']}. \nData from shape {old_shape} to shape {X_train.shape}.")
-
+    #print(list(np.mean(X_train, axis = 0)))
+    #print("\n","\n",list(np.std(X_train, axis = 0)))
     return X_train, X_test, y_train, y_test
 
 def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
@@ -302,6 +303,7 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
     
     
 if __name__ == "__main__":
+    import torchvision
     dummy_param_bin = True
-    dummy_param_param = {'resample': 1, 'poly_features_degree': 1, 'scaler': 'Standard'}
-    train, test = get_dataset(name="adult", binary = dummy_param_bin, preprocess_config = dummy_param_param)
+    dummy_param_param = {'resample': 1, 'poly_features_degree': 6, 'scaler': 'Standard'}
+    train, test = get_dataset(name="water", binary = dummy_param_bin, preprocess_config = dummy_param_param)
