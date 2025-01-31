@@ -2,4 +2,4 @@
 name: ${name}
 project: ${project}
 mode: online
-config: cifar10_resnet_scfe_bayes
+config: cifar10_resnet_l1_bayes
