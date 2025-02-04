@@ -1,5 +1,5 @@
 method: bayes
-name: Adult_BMLP1000_L2_Bayes
+name: Adult_BMLP1000_L1_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
