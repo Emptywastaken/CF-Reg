@@ -1,11 +1,10 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: normal
-  - model: bmlp    # mlp - water or cnn - cifar10
+  - loss: scfe_regularization
+  - model: logisticregression    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: water
-  - data: water
+  - data: ionosphere
   - trainer: trainer_default
   - optimizer: sgd
   - estimator: scfe
