@@ -2,9 +2,9 @@ defaults:
   - _self_
   - loader: loader
   - loss: l2normal
-  - model: bpreactresnet    # mlp - water or cnn - cifar10
+  - model: logisticregression    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: cifar10
+  - data: water
   - trainer: trainer_default
   - optimizer: sgd
   - estimator: scfe

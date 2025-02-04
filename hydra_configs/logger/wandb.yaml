@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: online
-config: cifar10_resnet_l1_bayes
+mode: offline
+config: 5_seeds_logreg_l1l2_water

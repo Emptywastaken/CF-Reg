@@ -10,7 +10,7 @@ def preprocess(df, preprocess_config, target_name):
     from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
     from sklearn.utils import resample, shuffle
     
-    seed_split = 42
+    seed_split = preprocess_config['seed_split']
     seed_resample = 42
 
     resample_value = preprocess_config['resample']
@@ -296,6 +296,25 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         
         return train_set, test_set
 
+    elif 'ionosphere':
+        from ucimlrepo import fetch_ucirepo 
+    
+        # fetch dataset 
+        ionosphere = fetch_ucirepo(id=52) 
+        
+        # data (as pandas dataframes) 
+        X = ionosphere.data.features 
+        y = ionosphere.data.targets 
+        # Convert 'g' to 1 and 'b' to 0
+        y = y.replace({'g': 1, 'b': 0})
+        df = pd.concat([X, y], axis=1)
+
+        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'Class')
+
+        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
+        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
+
+        return train_set, test_set
     else:
         
         raise ValueError(f"Dataset {name} is not available!")
@@ -303,7 +322,28 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
     
     
 if __name__ == "__main__":
-    import torchvision
+    from ucimlrepo import fetch_ucirepo 
+    
+    # fetch dataset 
+    ionosphere = fetch_ucirepo(id=52) 
+    
+    # data (as pandas dataframes) 
+    X = ionosphere.data.features 
+    y = ionosphere.data.targets 
+    # Convert 'g' to 1 and 'b' to 0
+    y = y.replace({'g': 1, 'b': 0})
+    df = pd.concat([X, y], axis=1)
+
     dummy_param_bin = True
-    dummy_param_param = {'resample': 1, 'poly_features_degree': 6, 'scaler': 'Standard'}
-    train, test = get_dataset(name="water", binary = dummy_param_bin, preprocess_config = dummy_param_param)
+    dummy_param_param = {'resample': 1, 'poly_features_degree': 2, 'scaler': 'Standard', "seed_split":42}
+    dtype_in = torch.float32
+    dtype_out = torch.float32 if dummy_param_bin else torch.long
+
+
+    X_train, X_test, y_train, y_test = preprocess(df, dummy_param_param, 'Class')
+
+    print(type(y_train), y_train.shape, y_train[0:5])
+    print(dtype_out)
+
+    train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
+    test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
