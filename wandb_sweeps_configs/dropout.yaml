@@ -1,9 +1,9 @@
 method: bayes
-name: counterfactual_overfitting
+name: ADULT_BMLP_Dropout_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  dropout:
+  model.dropout:
     min: 0.0001
     max: 0.9

@@ -1,5 +1,5 @@
 method: bayes
-name: WATER_BMLP1000_SCFE_Bayes
+name: ADULT_BMLP_SCFE_Bayes
 metric:
   goal: maximize
   name: validation/accuracy

@@ -283,9 +283,9 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         data = data_encoded[ordered_columns]
 
         # Display dataset information after preprocessing
-        print("Preprocessed Dataset Preview:")
-        print(data.columns)
-        print(data.head())
+        #print("Preprocessed Dataset Preview:")
+        #print(data.columns)
+        #print(data.head())
 
         print("\nDataset Shape:", data.shape)
 
