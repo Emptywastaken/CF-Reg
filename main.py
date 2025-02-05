@@ -53,7 +53,7 @@ def main(cfg: DictConfig) -> None:
             merge_hydra_wandb(cfg, wandb.config)
             log_params(cfg)
             set_run_name(cfg, run)
-        
+            cfg.preprocessor['seed_split'] = cfg.seed
             # To increase performances on CUDA 
             torch.set_float32_matmul_precision('high')
             wandb_logger = WandbLogger(project=cfg.logger.project)
@@ -66,6 +66,7 @@ def main(cfg: DictConfig) -> None:
                 torch.backends.cudnn.deterministic = True
                 torch.backends.cudnn.benchmark = False
             print(cfg)
+            print("cfg.seed: ", cfg.seed)
             trainset, testset = get_dataset(name = cfg.data.name, binary = cfg.loss.binary, preprocess_config = OmegaConf.to_container(cfg.preprocessor)) 
 
             # TODO These preprocessing steps should ideally be refactored into get_dataset().

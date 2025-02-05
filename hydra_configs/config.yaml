@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: l2normal
+  - loss: l1normal
   - model: logisticregression    # mlp - water or cnn - cifar10
   - logger: wandb
   - data: water

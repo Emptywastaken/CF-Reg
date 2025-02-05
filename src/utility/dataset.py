@@ -6,11 +6,57 @@ import numpy as np
 from typing import Tuple
 import os
 
+def features_transformation(X_train, X_test, preprocess_config):
+    poly_features_enabled = preprocess_config['poly_features_enabled']
+    rp_enabled = preprocess_config['rp_enabled']
+    rff_enabled = preprocess_config['rff_enabled']
+
+    if poly_features_enabled:
+        from sklearn.preprocessing import PolynomialFeatures
+        old_shape = X_train.shape
+        poly = PolynomialFeatures(preprocess_config['poly_features_degree'])
+        poly.fit(X_train)
+        X_train = poly.transform(X_train)
+        X_test = poly.transform(X_test)
+        print(f"Polynomial Features of degree {preprocess_config['poly_features_degree']}. \nData from shape {old_shape} to shape {X_train.shape}.")
+    
+    elif rp_enabled:
+        from sklearn.random_projection import GaussianRandomProjection
+        if preprocess_config['rp_components_rate'] != 0:
+            n_components = int(X_train.shape[0] * preprocess_config['rp_components_rate'])
+        else:
+            n_components = preprocess_config['rp_n_components']
+        old_shape = X_train.shape
+        rp = GaussianRandomProjection(n_components=n_components, random_state=42)
+        rp.fit(X_train)
+        X_train = rp.transform(X_train)
+        X_test = rp.transform(X_test)
+        print(f"Random Projection in {n_components}. \nData from shape {old_shape} to shape {X_train.shape}.")
+
+    elif rff_enabled:
+        from sklearn.kernel_approximation import RBFSampler
+        if preprocess_config['rff_components_rate'] != 0:
+            n_components = int(X_train.shape[0] * preprocess_config['rff_components_rate'])
+        else:
+            n_components = preprocess_config['rff_n_components']
+        old_shape = X_train.shape
+        rff = RBFSampler(n_components=n_components, random_state=42)
+        rff.fit(X_train)
+        X_train = rff.transform(X_train)
+        X_test = rff.transform(X_test)
+        print(f"Random Fourier Features in {n_components}. \nData from shape {old_shape} to shape {X_train.shape}.")
+    
+    else: 
+        print("Preprocessing transformation technique not yet implemented")
+        
+    return X_train, X_test
+
 def preprocess(df, preprocess_config, target_name):
-    from sklearn.preprocessing import StandardScaler, MinMaxScaler, PolynomialFeatures
+    from sklearn.preprocessing import StandardScaler, MinMaxScaler
     from sklearn.utils import resample, shuffle
     
     seed_split = preprocess_config['seed_split']
+    print("seed_split: ", seed_split)
     seed_resample = 42
 
     resample_value = preprocess_config['resample']
@@ -37,12 +83,8 @@ def preprocess(df, preprocess_config, target_name):
     X_test = scaler.transform(X_test)
     
     #if (preprocess_config['poly_features_degree'] != 1):
-    old_shape = X_train.shape
-    poly = PolynomialFeatures(preprocess_config['poly_features_degree'])
-    poly.fit(X_train)
-    X_train = poly.transform(X_train)
-    X_test = poly.transform(X_test)
-    print(f"Polynomial Features of degree {preprocess_config['poly_features_degree']}. \nData from shape {old_shape} to shape {X_train.shape}.")
+    X_train, X_test = features_transformation(X_train, X_test, preprocess_config)
+    
     #print(list(np.mean(X_train, axis = 0)))
     #print("\n","\n",list(np.std(X_train, axis = 0)))
     return X_train, X_test, y_train, y_test
