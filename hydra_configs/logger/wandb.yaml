@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: offline
-config: 5_seeds_logreg_l1l2_water
+mode: online
+config: scfe_bayes_logreg

@@ -1,5 +1,5 @@
 method: bayes
-name: ADULT_BMLP_SCFE_Bayes
+name: IONO_LogReg_SCFE_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
@@ -14,10 +14,10 @@ parameters:
     max: 2.5
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 0.0, single_output: True}
+      - {model_type: LogisticRegression}
   preprocessor:
     values:
-      - {poly_features_degree: 1, resample: 1}
+      - {poly_features_degree: 2, resample: 1}
 early_terminate:
   type: hyperband
   max_iter: 150

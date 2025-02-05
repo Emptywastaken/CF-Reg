@@ -325,9 +325,9 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         data = data_encoded[ordered_columns]
 
         # Display dataset information after preprocessing
-        print("Preprocessed Dataset Preview:")
-        print(data.columns)
-        print(data.head())
+        #print("Preprocessed Dataset Preview:")
+        #print(data.columns)
+        #print(data.head())
 
         print("\nDataset Shape:", data.shape)
 
@@ -383,7 +383,7 @@ if __name__ == "__main__":
 
 
     X_train, X_test, y_train, y_test = preprocess(df, dummy_param_param, 'Class')
-
+    print(y_test[y_test == 1].sum() / len(y_test))
     print(type(y_train), y_train.shape, y_train[0:5])
     print(dtype_out)
 

@@ -4,7 +4,7 @@ defaults:
   - loss: l1normal
   - model: logisticregression    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: water
+  - data: ionosphere
   - trainer: trainer_default
   - optimizer: sgd
   - estimator: scfe
