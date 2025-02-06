@@ -40,7 +40,7 @@ def features_transformation(X_train, X_test, preprocess_config):
         else:
             n_components = preprocess_config['rff_n_components']
         old_shape = X_train.shape
-        rff = RBFSampler(n_components=n_components, random_state=42)
+        rff = RBFSampler(n_components=n_components, random_state=42, gamma = "scale")
         rff.fit(X_train)
         X_train = rff.transform(X_train)
         X_test = rff.transform(X_test)
@@ -71,8 +71,9 @@ def preprocess(df, preprocess_config, target_name):
     X = df.drop(target_name, axis=1).values
     y = df[target_name].values
 
+    test_size = preprocess_config['test_size']
     # Split data into training and testing
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed_split, stratify=df[target_name])
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=seed_split, stratify=df[target_name])
 
     if preprocess_config['scaler'] == "MinMax":
         scaler = MinMaxScaler()
@@ -356,6 +357,22 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
         test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
 
+        return train_set, test_set
+
+    elif 'phomene':
+        try:
+            df=pd.read_csv('data/phomene.csv')
+            
+        except Exception:
+            
+            raise ValueError(f"Water dataset is not inside the data folder! cwd {os.getcwd()}")
+        df['Class'] = data['Class'].apply(lambda x: 0 if x == 1 else 1)
+        
+        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'Class')
+        
+        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
+        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
+        
         return train_set, test_set
     else:
         
