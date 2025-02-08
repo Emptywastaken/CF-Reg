@@ -1,6 +1,6 @@
 from torch.nn import Module
 import torch
-from ..estimator import SCFEEstimator 
+from ..aggr_func.aggregation_functions import get_aggr_func
 
 class CounterfactualRegularizationLoss(Module):
     
@@ -47,7 +47,7 @@ class DynamicCounterfactualRegularizationLoss(Module):
         return  train_loss + alpha * counterfactual_loss
     
 class SCFERegularizationLoss(Module):
-    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
+    def __init__(self, alpha: float = 0.1, binary: bool = True, **kwargs) -> None:
         super().__init__()
         self.binary = binary
         if self.binary: 
@@ -55,22 +55,28 @@ class SCFERegularizationLoss(Module):
         else:
             self.train_loss = torch.nn.functional.cross_entropy
         self.alpha = alpha
-    
+        self.aggr_function = get_aggr_func(**kwargs)
 
-    def forward(self, input: torch.Tensor, target: torch.Tensor, estimate: torch.Tensor):
+
+    def forward(self, **kwargs):
         """ input : model's predictions
             target: true classes
         """
+        print(kwargs)
+        input : torch.Tensor = kwargs['input']
+        target : torch.Tensor = kwargs['target']
+
         assert input.shape[0] == target.shape[0], "Batch size mismatch"
         if self.binary:
             assert input.dim() == 1,"Input must be of shape [N C]"
         else:
             assert input.dim() == 2, "Input must be of shape [N C]"
-        assert estimate.dim() == 1, "Estimate must be 1D"
+        #assert estimate.dim() == 1, "Estimate must be 1D"
         #print("input.dtype: ", input.dtype)
         #print("target.dtype: ", target.dtype)
         train_loss = self.train_loss(input, target)
-        return train_loss + self.alpha * torch.mean(estimate) 
+        reg_term = self.aggr_function(**kwargs)
+        return train_loss + self.alpha * reg_term
     
 
 class L1CrossEntropy(Module):
@@ -84,10 +90,13 @@ class L1CrossEntropy(Module):
         self.alpha = alpha
     
 
-    def forward(self, input: torch.Tensor, target: torch.Tensor, weights: torch.Tensor):
+    def forward(self, **kwargs):
         """ input : model's predictions
             target: true classes
         """
+        input : torch.Tensor = kwargs['input']
+        target : torch.Tensor = kwargs['target']
+        weights: torch.Tensor = kwargs['weights']
         assert input.shape[0] == target.shape[0], "Batch size mismatch"
         if self.binary:
             assert input.dim() == 1,"Input must be of shape [N C]"
@@ -110,10 +119,14 @@ class L2CrossEntropy(Module):
         self.alpha = alpha
     
 
-    def forward(self, input: torch.Tensor, target: torch.Tensor, weights: torch.Tensor):
+
+    def forward(self, **kwargs):
         """ input : model's predictions
             target: true classes
         """
+        input : torch.Tensor = kwargs['input']
+        target : torch.Tensor = kwargs['target']
+        weights: torch.Tensor = kwargs['weights']
         assert input.shape[0] == target.shape[0], "Batch size mismatch"
         if self.binary:
             assert input.dim() == 1,"Input must be of shape [N C]"
@@ -123,3 +136,21 @@ class L2CrossEntropy(Module):
         train_loss = self.train_loss(input, target)
         l2_reg = sum(param.pow(2).sum() for param in weights)
         return train_loss + self.alpha * l2_reg
+    
+class CrossEntropy(Module):
+    def __init__(self, binary: bool = True) -> None:
+        super().__init__()
+        self.binary = binary
+        if self.binary: 
+            self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
+        else:
+            self.train_loss = torch.nn.functional.cross_entropy
+
+    def forward(self, **kwargs):
+        """ input : model's predictions
+            target: true classes
+        """
+        input : torch.Tensor = kwargs['input']
+        target : torch.Tensor = kwargs['target']
+        return self.train_loss(input, target)
+    

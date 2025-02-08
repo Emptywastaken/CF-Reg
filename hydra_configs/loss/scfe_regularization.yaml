@@ -1,3 +1,6 @@
+defaults:
+  - aggr_func: montecarlo_vcp_weighted_mean
+
 type: scfe_regularization
 alpha: 0.1
 binary: True #Use [True] when the target vector is 1D otherwise use [False] 

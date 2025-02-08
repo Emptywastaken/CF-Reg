@@ -1,6 +1,6 @@
 from torch.nn import Module
 import torch
-from  src.losses.losses import CounterfactualRegularizationLoss, DynamicCounterfactualRegularizationLoss, SCFERegularizationLoss, L1CrossEntropy, L2CrossEntropy
+from  src.losses.losses import CounterfactualRegularizationLoss, DynamicCounterfactualRegularizationLoss, SCFERegularizationLoss, L1CrossEntropy, L2CrossEntropy, CrossEntropy 
 def get_loss(**kwargs) -> Module:
     
     name: str = kwargs.pop("type")
@@ -17,11 +17,7 @@ def get_loss(**kwargs) -> Module:
         return DynamicCounterfactualRegularizationLoss()
     
     elif name == "normal":
-        binary: bool = kwargs.pop("binary")
-        if binary:
-            return torch.nn.BCEWithLogitsLoss()
-        else:
-            return  torch.nn.CrossEntropyLoss()
+        return CrossEntropy(**kwargs)
     
     elif name == "scfe_regularization":
         return SCFERegularizationLoss(**kwargs)

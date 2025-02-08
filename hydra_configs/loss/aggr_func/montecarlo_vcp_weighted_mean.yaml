@@ -1,0 +1,5 @@
+type: montecarlo_vcp_weighted_mean
+
+n_samples: 1000
+radius: 3
+distribution: uniform

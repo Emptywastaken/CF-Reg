@@ -339,7 +339,7 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         
         return train_set, test_set
 
-    elif 'ionosphere':
+    elif name =='ionosphere':
         from ucimlrepo import fetch_ucirepo 
     
         # fetch dataset 
@@ -359,15 +359,15 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
 
         return train_set, test_set
 
-    elif 'phomene':
+    elif name == 'phomene':
         try:
             df=pd.read_csv('data/phomene.csv')
             
         except Exception:
             
-            raise ValueError(f"Water dataset is not inside the data folder! cwd {os.getcwd()}")
+            raise ValueError(f"Phomene dataset is not inside the data folder! cwd {os.getcwd()}")
         df['Class'] = data['Class'].apply(lambda x: 0 if x == 1 else 1)
-        
+
         X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'Class')
         
         train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))

@@ -53,7 +53,7 @@ def main(cfg: DictConfig) -> None:
             merge_hydra_wandb(cfg, wandb.config)
             log_params(cfg)
             set_run_name(cfg, run)
-            cfg.preprocessor['seed_split'] = cfg.seed
+            #cfg.preprocessor['seed_split'] = cfg.seed
             # To increase performances on CUDA 
             torch.set_float32_matmul_precision('high')
             wandb_logger = WandbLogger(project=cfg.logger.project)
@@ -95,7 +95,7 @@ def main(cfg: DictConfig) -> None:
             estimator = get_estimator(**(OmegaConf.to_container(cfg.estimator) | {"function" : model, "train_set" : trainset}))
             print("type(estimator): ", type(estimator))
 
-            criterion = get_loss(**cfg.loss)
+            criterion = get_loss(**(OmegaConf.to_container(cfg.loss) | {"function" : model, "train_set" : trainset}))
             evaluator = ClassifierEvaluator(classes=cfg.data.nclasses)
             
             clf =  LightningClassifier(model=model, 
