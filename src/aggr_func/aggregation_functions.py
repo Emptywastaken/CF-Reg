@@ -6,7 +6,7 @@ def get_aggr_func(**kwargs):
     aggr_func = kwargs.pop('aggr_func') #dict
     type = aggr_func['type']
     if type == "mean":
-        return torch.mean
+        return Mean()
     
     elif type == "montecarlo_vcp_weighted_mean":
         vcp_weighted_mean = Montecarlo_vcp_weighted_mean(**(aggr_func | kwargs))

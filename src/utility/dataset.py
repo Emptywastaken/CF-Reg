@@ -366,7 +366,7 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         except Exception:
             
             raise ValueError(f"Phomene dataset is not inside the data folder! cwd {os.getcwd()}")
-        df['Class'] = data['Class'].apply(lambda x: 0 if x == 1 else 1)
+        df['Class'] = df['Class'].apply(lambda x: 0 if x == 1 else 1)
 
         X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'Class')
         

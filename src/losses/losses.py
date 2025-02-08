@@ -62,7 +62,7 @@ class SCFERegularizationLoss(Module):
         """ input : model's predictions
             target: true classes
         """
-        print(kwargs)
+        #print(kwargs)
         input : torch.Tensor = kwargs['input']
         target : torch.Tensor = kwargs['target']
 

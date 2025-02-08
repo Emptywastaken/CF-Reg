@@ -1,5 +1,5 @@
 defaults:
-  - aggr_func: montecarlo_vcp_weighted_mean
+  - aggr_func: mean
 
 type: scfe_regularization
 alpha: 0.1
