@@ -67,7 +67,7 @@ def main(cfg: DictConfig) -> None:
                 torch.backends.cudnn.benchmark = False
             print(cfg)
             print("cfg.seed: ", cfg.seed)
-            exit()
+            
             trainset, testset = get_dataset(name = cfg.data.name, binary = cfg.loss.binary, preprocess_config = OmegaConf.to_container(cfg.preprocessor)) 
 
             # TODO These preprocessing steps should ideally be refactored into get_dataset().
