@@ -5,7 +5,7 @@ from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
 import inspect
-
+import time
 
 class LightningClassifier(L.LightningModule):
     
@@ -55,14 +55,14 @@ class LightningClassifier(L.LightningModule):
         
         
     def on_train_epoch_start(self) -> None:
-        
+        self.train_t_start = time.time_ns()
         self.train_output = []
         self.train_target = []
         self.train_loss = []
         self.train_estimate = []
     
     def on_train_epoch_end(self) -> None:
-        
+        self.train_t_end = time.time_ns()
         stage: str = "train"
         with torch.no_grad():
             accuracy, f1, precision, recall, crossentropy = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
@@ -75,7 +75,8 @@ class LightningClassifier(L.LightningModule):
             f"{stage}/f1-score": f1,
             f"{stage}/precision": precision,
             f"{stage}/recall": recall,
-            f"{stage}/crossentropy": crossentropy
+            f"{stage}/crossentropy": crossentropy,
+            f"{stage}/time_elapsed" : self.train_t_end - self.train_t_start
         }
 
         estimator_log_data = self.estimator.build_log(self.train_estimate, stage)
@@ -131,7 +132,7 @@ class LightningClassifier(L.LightningModule):
         return loss
     
     def on_validation_epoch_start(self) -> None:
-        
+        self.val_t_start = time.time_ns()
         self.val_output = []
         self.val_target = []
         self.val_loss = []
@@ -139,7 +140,7 @@ class LightningClassifier(L.LightningModule):
     
     
     def on_validation_epoch_end(self) -> None:
-        
+        self.val_t_end = time.time_ns()
         if self.trainer.state.stage != "sanity_check":
             
             stage: str = "validation"
@@ -152,7 +153,8 @@ class LightningClassifier(L.LightningModule):
                 f"{stage}/f1-score": f1,
                 f"{stage}/precision": precision,
                 f"{stage}/recall": recall,
-                f"{stage}/crossentropy": crossentropy
+                f"{stage}/crossentropy": crossentropy,
+                f"{stage}/time_elapsed" : self.val_t_end - self.val_t_start
             }
 
             estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
