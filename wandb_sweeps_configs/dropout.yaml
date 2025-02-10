@@ -1,5 +1,5 @@
 method: bayes
-name: ADULT_BMLP_Dropout_Bayes
+name: Water_BMLP_Dropout_Bayes
 metric:
   goal: maximize
   name: validation/accuracy

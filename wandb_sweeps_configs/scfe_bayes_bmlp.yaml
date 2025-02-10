@@ -1,16 +1,12 @@
 method: bayes
-name: ADULT_BMLP_SCFE_Bayes
+name: Phomene_BMLP_SCFE_Bayes_mean
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   loss.aggr_func.type: 
     values:
-      - montecarlo_vcp_weighted_mean
-  loss.aggr_func.radius:
-    distribution: uniform
-    min: 1.0
-    max: 100.0
+      - mean
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
     min: -1.0

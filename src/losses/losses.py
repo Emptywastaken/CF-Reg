@@ -4,9 +4,9 @@ from ..aggr_func.aggregation_functions import get_aggr_func
 
 class CounterfactualRegularizationLoss(Module):
     
-    def __init__(self, alpha: float = 0.5) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
-        
+        alpha : float = kwargs['alpha']
         self.train_loss = torch.nn.CrossEntropyLoss()
         self.counterfactual_loss = torch.nn.CrossEntropyLoss()
         self.alpha = alpha
@@ -47,8 +47,10 @@ class DynamicCounterfactualRegularizationLoss(Module):
         return  train_loss + alpha * counterfactual_loss
     
 class SCFERegularizationLoss(Module):
-    def __init__(self, alpha: float = 0.1, binary: bool = True, **kwargs) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
+        alpha : float = kwargs['alpha']
+        binary : bool = kwargs['binary']
         self.binary = binary
         if self.binary: 
             self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
@@ -80,14 +82,17 @@ class SCFERegularizationLoss(Module):
     
 
 class L1CrossEntropy(Module):
-    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
+        alpha : float = kwargs['alpha']
+        binary : bool = kwargs['binary']
         self.binary = binary
+        self.alpha = alpha
         if self.binary: 
             self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
         else:
             self.train_loss = torch.nn.functional.cross_entropy
-        self.alpha = alpha
+        
     
 
     def forward(self, **kwargs):
@@ -109,15 +114,16 @@ class L1CrossEntropy(Module):
         return train_loss
     
 class L2CrossEntropy(Module):
-    def __init__(self, alpha: float = 0.1, binary: bool = True) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
+        alpha : float = kwargs['alpha']
+        binary : bool = kwargs['binary']
         self.binary = binary
+        self.alpha = alpha
         if self.binary: 
             self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
         else:
             self.train_loss = torch.nn.functional.cross_entropy
-        self.alpha = alpha
-    
 
 
     def forward(self, **kwargs):
@@ -138,8 +144,9 @@ class L2CrossEntropy(Module):
         return train_loss + self.alpha * l2_reg
     
 class CrossEntropy(Module):
-    def __init__(self, binary: bool = True) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
+        binary : bool = kwargs['binary']
         self.binary = binary
         if self.binary: 
             self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits

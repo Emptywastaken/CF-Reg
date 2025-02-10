@@ -6,6 +6,7 @@ def get_aggr_func(**kwargs):
     aggr_func = kwargs.pop('aggr_func') #dict
     type = aggr_func['type']
     if type == "mean":
+        print("Aggregation Function: mean")
         return Mean()
     
     elif type == "montecarlo_vcp_weighted_mean":
@@ -13,15 +14,18 @@ def get_aggr_func(**kwargs):
         return vcp_weighted_mean
     
     elif type == "tp_tn_mean":
+        print("Aggregation Function: TP_TN_mean")
         return TP_TN_mean()
     
     elif type == "fp_fn_mean":
+        print("Aggregation Function: FP_FN_mean")
         return FP_FN_mean()
     
     elif type == "supervised_mean":
+        print("Aggregation Function: Supervised_mean")
         return Supervised_mean()
-    
-    return None
+    else :
+        raise ValueError(f"Aggregation function {type} is not available!")
 
 class Mean(Module):
     def __init__(self, **kwargs):
@@ -68,11 +72,11 @@ class TP_TN_mean(Module):
         # Compute mask efficiently
         mask = ((output < 0) & (target == 0)) | ((output >= 0) & (target == 1))
         mask = mask.float()  # Convert to float tensor for weighting
-
+        torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.sum().clamp(min=1)  # Avoid division by zero
         
-        torch.set_grad_enabled(True)
+        
         
         return weighted_mean
             
@@ -89,11 +93,11 @@ class FP_FN_mean(Module):
         
         # Compute mask with 0 or -1
         mask = -((output < 0) & (target == 1) | (output >= 0) & (target == 0)).float()
-
+        torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.abs().sum().clamp(min=1)  # Avoid division by zero
         
-        torch.set_grad_enabled(True)
+        
         
         return weighted_mean
     
@@ -110,10 +114,10 @@ class Supervised_mean(Module):
         
         # Compute mask with 1 or -1
         mask = 2 * (((output < 0) & (target == 0)) | ((output >= 0) & (target == 1))).float() - 1
-
+        torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.abs().sum().clamp(min=1)  # Avoid division by zero
         
-        torch.set_grad_enabled(True)
+        
         
         return weighted_mean

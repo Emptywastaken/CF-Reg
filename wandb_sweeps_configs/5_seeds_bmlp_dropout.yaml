@@ -1,5 +1,5 @@
 method: grid
-name: 5_Adult_BMLP_DROPOUT
+name: 5_WATER_BMLP_DROPOUT
 metric:
   goal: maximize
   name: validation/accuracy
@@ -19,7 +19,7 @@ parameters:
       - {reg_coef: 0.1}
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [1000, 100, 10], dropout: 0.06005434391331929, single_output: True}
+      - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.00023364396947601115, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}
