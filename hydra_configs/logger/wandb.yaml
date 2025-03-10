@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: online
+mode: offline
 config: 5_seeds_bmlp_dropout

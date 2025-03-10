@@ -8,7 +8,7 @@ from .estimator import Estimator
 class SCFEEstimator(Estimator):
     def __init__(self, 
                  function: torch.nn.Module,
-                 reg_coef: float):
+                 reg_coef: dict):
         self.function = function
         self.reg_coef = reg_coef
 
@@ -68,7 +68,12 @@ class SCFEEstimator(Estimator):
         #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).shape)
         #print("(m * self.reg_coef / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))).shape", (m * self.reg_coef / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))).shape)
 
-        delta_scfe = (m / (self.reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))) * w  # [batch_size, input_dim]
+        if self.reg_coef['rc_type'] == "by_value":
+            delta_scfe = (m / (self.reg_coef['value'] + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))) * w  # [batch_size, input_dim]
+        elif self.reg_coef['rc_type'] == "optim":
+            reg_coef = w_norm_squared / (w_norm_squared - 1)
+            delta_scfe = (m / (reg_coef + w_norm_squared)).view(m.size(0), *([1] * (w.ndim - 1))) * w  # [batch_size, input_dim]
+            
         #print("delta_scfe.shape: ", delta_scfe.shape)
         norm_delta_scfe = torch.norm(delta_scfe, p=2, dim=reduce_dims)
 

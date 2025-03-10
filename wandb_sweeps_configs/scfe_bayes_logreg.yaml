@@ -1,9 +1,12 @@
 method: bayes
-name: IONO_LogReg_SCFE_Bayes
+name: IONO_LogReg_SCFE_Bayes_TP_TN
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
+  loss.aggr_func.type: 
+    values:
+      - tp_tn_mean
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
     min: -1.0
