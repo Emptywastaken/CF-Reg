@@ -10,7 +10,7 @@ defaults:
   - estimator: scfe
   - preprocessor: preprocessing
 
-run_mode: run  #sweep   
+run_mode: run #sweep #run     
 project: counterfactual_overfitting_experiments_new
 name: experiments
 version: 1

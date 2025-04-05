@@ -4,14 +4,16 @@ metric:
   goal: maximize
   name: validation/accuracy
 parameters:
+  loss.aggr_func.type: 
+    values:
+      - tp_tn_mean
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
     min: -1.0
-    max: -0.00001
+    max: -0.000001
   estimator.reg_coef:  # `reg_coef` nested under `estimator`
-    distribution: uniform
-    min: 0.01
-    max: 2.5
+    values:
+      - {rc_type: 'optim'}
   model:
     values:
       - {model_type: BPreActResNet}
