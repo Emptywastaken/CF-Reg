@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Tuple
 from src.estimator import MontecarloEstimator, SCFEEstimator
 from src.trainer import LightningClassifier
-from src.utility import get_dataset, get_model, get_loss, get_estimator, merge_hydra_wandb, ClassifierEvaluator, read_yaml
+from src.utility import get_dataset, get_model, get_loss, get_estimator, merge_hydra_wandb, ClassifierEvaluator, read_yaml, get_callbacks
 import wandb
 import hydra
 from omegaconf import DictConfig, OmegaConf
@@ -89,7 +89,6 @@ def main(cfg: DictConfig) -> None:
 
             # Update the input dimension in the model
            # cfg.data.input_dim = train_data_poly.size(1)
-          
 
 
             model = get_model(config=OmegaConf.to_container(cfg.model) | {"input_dim": train_data.shape, "nclasses": cfg.data.nclasses, "channel_in": cfg.data.channel_in})
@@ -111,7 +110,14 @@ def main(cfg: DictConfig) -> None:
             test_loader = DataLoader(testset, **cfg.loader)
             
             wandb_logger.watch(model, log='gradients', log_freq=100)
-            trainer = pl.Trainer(**cfg.trainer, logger=wandb_logger)
+ 
+
+            
+            callbacks = cfg.trainer.callbacks
+            trainer_cfg = {k: v for k, v in cfg.trainer.items() if k != "callbacks"}
+
+            callbacks = get_callbacks(**callbacks)
+            trainer = pl.Trainer(**trainer_cfg, callbacks=callbacks, logger=wandb_logger)
             trainer.fit(clf, train_loader, test_loader)
     
     

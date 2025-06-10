@@ -1,0 +1,19 @@
+method: grid
+name: 5_cifar10_Earlystop
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  seed:
+    values:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+  trainer.callbacks: 
+    values:
+      - {early_stop_enable: True, patience: 30}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}

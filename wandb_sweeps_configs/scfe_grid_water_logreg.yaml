@@ -1,31 +1,32 @@
 method: grid
-name: WATER_LogReg_SCFE
+name: Water_LogReg_Earlystop_Grid
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  loss:
+  trainer.callbacks: 
     values:
-      - {type: scfe_regularization, alpha: 0.001}
-      - {type: scfe_regularization, alpha: 0.1}
-      - {type: scfe_regularization, alpha: 0.5}
-      - {type: scfe_regularization, alpha: 1}
-      - {type: normal}
-      - {type: l1normal, alpha: 0.001}
-      - {type: l1normal, alpha: 0.1}
-      - {type: l1normal, alpha: 0.5}
-      - {type: l1normal, alpha: 1}
-      - {type: l2normal, alpha: 0.1}
-      - {type: l2normal, alpha: 0.5}
-      - {type: l2normal, alpha: 1}
-  estimator:
-    values:
-      - {reg_coef: 0.1}
-      - {reg_coef: 1.0}
-  model:
-    values:
-      - {model_type: LogisticRegression}
+      - {early_stop_enable: True, patience: 5}
+      - {early_stop_enable: True, patience: 10}
+      - {early_stop_enable: True, patience: 15}
+      - {early_stop_enable: True, patience: 20}
+      - {early_stop_enable: True, patience: 25}
+      - {early_stop_enable: True, patience: 30}
+      - {early_stop_enable: True, patience: 35}
+      - {early_stop_enable: True, patience: 40}
+      - {early_stop_enable: True, patience: 45}
+      - {early_stop_enable: True, patience: 50}
+      - {early_stop_enable: True, patience: 55}
+      - {early_stop_enable: True, patience: 60}
+      - {early_stop_enable: True, patience: 65}
+      - {early_stop_enable: True, patience: 70}
+      - {early_stop_enable: True, patience: 75}
+      - {early_stop_enable: True, patience: 80}
+      - {early_stop_enable: True, patience: 85}
+      - {early_stop_enable: True, patience: 90}
+      - {early_stop_enable: True, patience: 95}
+      - {early_stop_enable: True, patience: 100}
   preprocessor:
     values:
-      - {poly_features_degree: 1, resample: 1}
       - {poly_features_degree: 6, resample: 1}
+      

@@ -1,0 +1,109 @@
+method: grid
+name: WATER_BMLP4_Earlystop_SEARCH_120_2000
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  trainer.callbacks: 
+    values:
+      - {early_stop_enable: True, patience: 120}
+      - {early_stop_enable: True, patience: 140}
+      - {early_stop_enable: True, patience: 160}
+      - {early_stop_enable: True, patience: 180}
+      - {early_stop_enable: True, patience: 200}
+      - {early_stop_enable: True, patience: 220}
+      - {early_stop_enable: True, patience: 240}
+      - {early_stop_enable: True, patience: 260}
+      - {early_stop_enable: True, patience: 280}
+      - {early_stop_enable: True, patience: 300}
+      - {early_stop_enable: True, patience: 320}
+      - {early_stop_enable: True, patience: 340}
+      - {early_stop_enable: True, patience: 360}
+      - {early_stop_enable: True, patience: 380}
+      - {early_stop_enable: True, patience: 400}
+      - {early_stop_enable: True, patience: 420}
+      - {early_stop_enable: True, patience: 440}
+      - {early_stop_enable: True, patience: 460}
+      - {early_stop_enable: True, patience: 480}
+      - {early_stop_enable: True, patience: 500}
+      - {early_stop_enable: True, patience: 520}
+      - {early_stop_enable: True, patience: 540}
+      - {early_stop_enable: True, patience: 560}
+      - {early_stop_enable: True, patience: 580}
+      - {early_stop_enable: True, patience: 600}
+      - {early_stop_enable: True, patience: 620}
+      - {early_stop_enable: True, patience: 640}
+      - {early_stop_enable: True, patience: 660}
+      - {early_stop_enable: True, patience: 680}
+      - {early_stop_enable: True, patience: 700}
+      - {early_stop_enable: True, patience: 720}
+      - {early_stop_enable: True, patience: 740}
+      - {early_stop_enable: True, patience: 760}
+      - {early_stop_enable: True, patience: 780}
+      - {early_stop_enable: True, patience: 800}
+      - {early_stop_enable: True, patience: 820}
+      - {early_stop_enable: True, patience: 840}
+      - {early_stop_enable: True, patience: 860}
+      - {early_stop_enable: True, patience: 880}
+      - {early_stop_enable: True, patience: 900}
+      - {early_stop_enable: True, patience: 920}
+      - {early_stop_enable: True, patience: 940}
+      - {early_stop_enable: True, patience: 960}
+      - {early_stop_enable: True, patience: 980}
+      - {early_stop_enable: True, patience: 1000}
+      - {early_stop_enable: True, patience: 1020}
+      - {early_stop_enable: True, patience: 1040}
+      - {early_stop_enable: True, patience: 1060}
+      - {early_stop_enable: True, patience: 1080}
+      - {early_stop_enable: True, patience: 1100}
+      - {early_stop_enable: True, patience: 1120}
+      - {early_stop_enable: True, patience: 1140}
+      - {early_stop_enable: True, patience: 1160}
+      - {early_stop_enable: True, patience: 1180}
+      - {early_stop_enable: True, patience: 1200}
+      - {early_stop_enable: True, patience: 1220}
+      - {early_stop_enable: True, patience: 1240}
+      - {early_stop_enable: True, patience: 1260}
+      - {early_stop_enable: True, patience: 1280}
+      - {early_stop_enable: True, patience: 1300}
+      - {early_stop_enable: True, patience: 1320}
+      - {early_stop_enable: True, patience: 1340}
+      - {early_stop_enable: True, patience: 1360}
+      - {early_stop_enable: True, patience: 1380}
+      - {early_stop_enable: True, patience: 1400}
+      - {early_stop_enable: True, patience: 1420}
+      - {early_stop_enable: True, patience: 1440}
+      - {early_stop_enable: True, patience: 1460}
+      - {early_stop_enable: True, patience: 1480}
+      - {early_stop_enable: True, patience: 1500}
+      - {early_stop_enable: True, patience: 1520}
+      - {early_stop_enable: True, patience: 1540}
+      - {early_stop_enable: True, patience: 1560}
+      - {early_stop_enable: True, patience: 1580}
+      - {early_stop_enable: True, patience: 1600}
+      - {early_stop_enable: True, patience: 1620}
+      - {early_stop_enable: True, patience: 1640}
+      - {early_stop_enable: True, patience: 1660}
+      - {early_stop_enable: True, patience: 1680}
+      - {early_stop_enable: True, patience: 1700}
+      - {early_stop_enable: True, patience: 1720}
+      - {early_stop_enable: True, patience: 1740}
+      - {early_stop_enable: True, patience: 1760}
+      - {early_stop_enable: True, patience: 1780}
+      - {early_stop_enable: True, patience: 1800}
+      - {early_stop_enable: True, patience: 1820}
+      - {early_stop_enable: True, patience: 1840}
+      - {early_stop_enable: True, patience: 1860}
+      - {early_stop_enable: True, patience: 1880}
+      - {early_stop_enable: True, patience: 1900}
+      - {early_stop_enable: True, patience: 1920}
+      - {early_stop_enable: True, patience: 1940}
+      - {early_stop_enable: True, patience: 1960}
+      - {early_stop_enable: True, patience: 1980}
+      - {early_stop_enable: True, patience: 2000}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}
+  model:
+    values:
+      - {model_type: BMLP, hidden_layers: [100, 1000, 100, 30], dropout: 0.0, single_output: True}

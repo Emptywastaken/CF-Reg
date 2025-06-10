@@ -4,3 +4,4 @@ from .models import get_model
 from .loss import get_loss
 from .utils import merge_hydra_wandb, read_yaml
 from .estimator import get_estimator
+from .trainer import get_callbacks

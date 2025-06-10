@@ -1,23 +1,25 @@
 method: grid
-name: 5_CIFAR10_RESNET_SCFE_NORMAL
+name: 15_CIFAR10_RESNET_SCFE_L2
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 42
-      - 43
-      - 44
-      - 45
-      - 46
+      - 47
+      - 48
+      - 49
+      - 50
+      - 51
+      - 52
+      - 53
+      - 54
+      - 55
+      - 56
   loss:
     values:
       - {type: scfe_regularization, alpha: -0.301813994900475}
-      - {type: normal, alpha: 0.0005}
-  estimator:
-    values:
-      - {reg_coef: 2.150170438210926}
+      - {type: l2normal, alpha: 0.08646921925589064}
   model:
     values:
       - {model_type: BPreActResNet}

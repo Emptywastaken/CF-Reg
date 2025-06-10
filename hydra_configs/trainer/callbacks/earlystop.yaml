@@ -1,0 +1,6 @@
+early_stop_enable: False
+monitor: validation/loss
+min_delta: 0.00
+patience: 3
+verbose: True
+mode: min
