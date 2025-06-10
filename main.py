@@ -104,7 +104,7 @@ def main(cfg: DictConfig) -> None:
                                        evaluator=evaluator, 
                                        estimator=estimator, 
                                        counterfactual=is_counterfactual(cfg),
-                                        margin = True)
+                                        margin = False)
                 
             train_loader = DataLoader(trainset, **cfg.loader)
             test_loader = DataLoader(testset, **cfg.loader)
