@@ -104,7 +104,8 @@ def main(cfg: DictConfig) -> None:
                                        optim_config=OmegaConf.to_container(cfg.optimizer), 
                                        evaluator=evaluator, 
                                        estimator=estimator, 
-                                       counterfactual=is_counterfactual(cfg))
+                                       counterfactual=is_counterfactual(cfg),
+                                        margin = True)
                 
             train_loader = DataLoader(trainset, **cfg.loader)
             test_loader = DataLoader(testset, **cfg.loader)

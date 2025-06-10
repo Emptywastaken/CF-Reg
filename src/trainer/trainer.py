@@ -4,6 +4,7 @@ import pytorch_lightning as L
 from src.models.models import extract_embeddings_hook
 from src.utility.evaluation import ClassifierEvaluator
 from src.utility.optimizer import get_optimizer
+import numpy as np
 import inspect
 import time
 
@@ -15,7 +16,8 @@ class LightningClassifier(L.LightningModule):
                  optim_config: dict,
                  evaluator: ClassifierEvaluator,
                  estimator: Estimator,
-                 counterfactual: bool) -> None:
+                 counterfactual: bool,
+                 margin: bool) -> None:
         
         super().__init__()
 
@@ -36,6 +38,7 @@ class LightningClassifier(L.LightningModule):
         self.estimator = estimator
         self.counterfactual = counterfactual
         self.show_embedding = False
+        self.margin = margin
         
         if self.show_embedding:
             self.model.layers[-2].register_forward_hook(extract_embeddings_hook)
@@ -60,6 +63,7 @@ class LightningClassifier(L.LightningModule):
         self.train_target = []
         self.train_loss = []
         self.train_estimate = []
+        self.train_margin = []
     
     def on_train_epoch_end(self) -> None:
         self.train_t_end = time.time_ns()
@@ -67,6 +71,8 @@ class LightningClassifier(L.LightningModule):
         with torch.no_grad():
             accuracy, f1, precision, recall, crossentropy = self.evaluator.get_complete_evaluation(self.train_output, self.train_target)
         
+        evcp_bound = self.evaluator.get_avg_evcp_bound(np.mean(self.train_margin), self.estimator.radius, 5005) if np.mean(self.train_margin) <= self.estimator.radius else 0
+   
     
         log_data = {
             f"{stage}/loss": sum(self.train_loss) / len(self.train_loss),
@@ -76,6 +82,8 @@ class LightningClassifier(L.LightningModule):
             f"{stage}/precision": precision,
             f"{stage}/recall": recall,
             f"{stage}/crossentropy": crossentropy,
+            f"{stage}/avgmargin" : np.mean(self.train_margin),
+            f"{stage}/avgevcpbound": evcp_bound,
             f"{stage}/time_elapsed" : self.train_t_end - self.train_t_start
         }
 
@@ -117,6 +125,17 @@ class LightningClassifier(L.LightningModule):
         self.train_loss += [loss.item()]
         self.train_estimate += estimate.tolist()
 
+        if self.margin:
+            torch.set_grad_enabled(mode=False)
+            w = self.model.linear.weight.cpu()
+            f_x = self.model.forward(data).cpu()
+            #print("f_x.shape:", f_x.shape)
+            #print("w.shape:", w.shape)
+            margin = np.abs(f_x/np.linalg.norm(w))
+            self.train_margin += margin.tolist()
+            #print("margin:", margin.shape)
+            torch.set_grad_enabled(mode=True)
+
         if self.show_embedding:
             from sklearn.decomposition import PCA
             import matplotlib.pyplot as plt
@@ -136,7 +155,6 @@ class LightningClassifier(L.LightningModule):
         self.val_output = []
         self.val_target = []
         self.val_loss = []
-        self.val_estimate = []
     
     
     def on_validation_epoch_end(self) -> None:
@@ -157,9 +175,9 @@ class LightningClassifier(L.LightningModule):
                 f"{stage}/time_elapsed" : self.val_t_end - self.val_t_start
             }
 
-            estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
+            #estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
 
-            log_data.update(estimator_log_data)
+            #log_data.update(estimator_log_data)
 
             self.log_dict(log_data, on_epoch=True, on_step=False) 
 
@@ -173,12 +191,13 @@ class LightningClassifier(L.LightningModule):
         #p_x = self.estimator.get_estimate(out=out, target=target_cf)
    
 #        old_params = {name: param.clone() for name, param in self.model.named_parameters()}
-        torch.set_grad_enabled(mode=True)
-        estimate = self.estimator.get_estimate(data = data, output = output)     
-        torch.set_grad_enabled(mode=False)
+        #torch.set_grad_enabled(mode=True)
+        #estimate = self.estimator.get_estimate(data = data, output = output)
+   
+        #torch.set_grad_enabled(mode=False)
         #  new_params = {name: param for name, param in self.model.named_parameters()}
 
-        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}
+        values: dict = {"input": output, "target": target, "estimate": "None", "weights": self.model.parameters(), "data": data}
 #        forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
 #        values = {key: value for key,value in values.items() if key in forward_signature}
         #if self.counterfactual:
@@ -188,7 +207,8 @@ class LightningClassifier(L.LightningModule):
         self.val_target += target.tolist()
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
-        self.val_estimate += estimate.tolist()
+    
+
 #        for name in old_params:
 #            if not torch.equal(old_params[name], new_params[name].data):
 #                print(f"Parameter '{name}' has changed.")
