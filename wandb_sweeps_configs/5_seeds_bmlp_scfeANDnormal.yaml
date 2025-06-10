@@ -1,26 +1,25 @@
 method: grid
-name: 5_WATER_BMLP100_SCFE_NORMAL
+name: 15_Phomene_BMLP100_SCFE_Normal
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 42
-      - 43
-      - 44
-      - 45
-      - 46
+      - 37
+      - 38
+      - 39
+      - 40
+      - 41
   loss:
     values:
 #      - {type: scfe_regularization, alpha: -0.07636928146169841}
 #      - {type: normal, alpha: 0.0005}
-      - {type: scfe_regularization, alpha: -0.2566522290950196}
-      - {type: normal, alpha: 0.0005}
-  estimator:
+      - {type: scfe_regularization, alpha: -0.05157765136937065}
+      - {type: normal, alpha: 0.05}
+  loss.aggr_func.type: 
     values:
-#      - {reg_coef: 2.206795094426743}
-      - {reg_coef: 1.9775160360200243}
+      - mean
   model:
     values:
      - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.0, single_output: True}

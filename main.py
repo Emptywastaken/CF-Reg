@@ -111,12 +111,12 @@ def main(cfg: DictConfig) -> None:
             wandb_logger.watch(model, log='gradients', log_freq=100)
  
 
-
+            
             callbacks = cfg.trainer.callbacks
-            del cfg.trainer.callbacks
+            trainer_cfg = {k: v for k, v in cfg.trainer.items() if k != "callbacks"}
 
             callbacks = get_callbacks(**callbacks)
-            trainer = pl.Trainer(**cfg.trainer, callbacks=callbacks, logger=wandb_logger)
+            trainer = pl.Trainer(**trainer_cfg, callbacks=callbacks, logger=wandb_logger)
             trainer.fit(clf, train_loader, test_loader)
     
     

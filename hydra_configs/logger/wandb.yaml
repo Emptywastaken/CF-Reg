@@ -1,5 +1,5 @@
 
 name: ${name}
 project: ${project}
-mode: offline
-config: cifar10_resnet_scfe_bayes
+mode: online
+config: dropout_bayes_bmlp

@@ -1,16 +1,16 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: scfe_regularization
+  - loss: normal
   - model: bmlp    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: water
+  - data: phomene
   - trainer: trainer_default
   - optimizer: sgd
   - estimator: scfe
   - preprocessor: preprocessing
 
-run_mode: run #sweep #run     
+run_mode: sweep #run     
 project: counterfactual_overfitting_experiments_new
 name: experiments
 version: 1
