@@ -84,6 +84,8 @@ class DiceEstimator(Estimator):
         x: [N, D] tensor of new queries
         returns: [N, D] counterfactuals
         """
+        original_training_state = self.function.training
+        print("I'm generating counterfactuals")
         # 1) to DataFrame
         df_query = pd.DataFrame(
             x.detach().cpu().numpy(),
@@ -98,7 +100,7 @@ class DiceEstimator(Estimator):
             yloss_type = self.dice_yloss_type,
             min_iter = self.dice_min_iter,
             max_iter = self.dice_max_iter,
-            learning_rate = self.dice_dice_learning_rate,
+            learning_rate = self.dice_learning_rate,
             limit_steps_ls = self.dice_limit_steps_ls
         )
 
@@ -107,6 +109,8 @@ class DiceEstimator(Estimator):
         # shape is [N * cf_per_instance, D], in same order as df_query
         cfs_np = cfs_df[self.feature_names].values \
                  .reshape(len(df_query), self.cf_per_instance, -1)[:, 0, :]
+        
+        self.train(original_training_state)
 
         return torch.from_numpy(cfs_np).to(x.device).type_as(x)
 
