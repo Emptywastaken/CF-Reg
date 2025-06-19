@@ -1,0 +1,6 @@
+type: dice
+dice_min_iter: 50
+dice_max_iter: 500
+dice_yloss_type: hinge_loss
+dice_learning_rate: 0.05
+dice_limit_steps_ls: 1000
