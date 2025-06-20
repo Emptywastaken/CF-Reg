@@ -8,6 +8,6 @@ def get_estimator(**kwargs) -> Estimator:
     elif type == "scfe":
         return SCFEEstimator(function=kwargs.pop("function"), **kwargs) 
     elif type == "dice":
-        return DiceEstimator(function=kwargs.pop("function"),train_set = train_set, **kwargs)
+        return DiceEstimator(function=kwargs.pop("function"), **kwargs)
     else:
         raise ValueError(f"This estimator has not been implemented yet!")

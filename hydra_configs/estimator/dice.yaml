@@ -1,6 +1,8 @@
 type: dice
-dice_min_iter: 50
-dice_max_iter: 100
-dice_yloss_type: hinge_loss
-dice_learning_rate: 0.05
-dice_limit_steps_ls: 100
+K: 1
+lambda_proximity: 0.1
+gamma_diversity: 0.1
+num_steps: 500
+learning_rate: 0.01
+loss_type: hinge
+prox_type: mad

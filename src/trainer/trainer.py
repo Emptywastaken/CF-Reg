@@ -158,6 +158,7 @@ class LightningClassifier(L.LightningModule):
         self.val_output = []
         self.val_target = []
         self.val_loss = []
+        self.val_estimate = []
     
     
     def on_validation_epoch_end(self) -> None:
@@ -178,9 +179,9 @@ class LightningClassifier(L.LightningModule):
                 f"{stage}/time_elapsed" : self.val_t_end - self.val_t_start
             }
 
-            #estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
+            estimator_log_data = self.estimator.build_log(self.val_estimate, stage)
 
-            #log_data.update(estimator_log_data)
+            log_data.update(estimator_log_data)
 
             self.log_dict(log_data, on_epoch=True, on_step=False) 
 
@@ -194,13 +195,13 @@ class LightningClassifier(L.LightningModule):
         #p_x = self.estimator.get_estimate(out=out, target=target_cf)
    
 #        old_params = {name: param.clone() for name, param in self.model.named_parameters()}
-        #torch.set_grad_enabled(mode=True)
-        #estimate = self.estimator.get_estimate(data = data, output = output)
+        torch.set_grad_enabled(mode=True)
+        estimate = self.estimator.get_estimate(data = data, output = output)
    
-        #torch.set_grad_enabled(mode=False)
+        torch.set_grad_enabled(mode=False)
         #  new_params = {name: param for name, param in self.model.named_parameters()}
 
-        values: dict = {"input": output, "target": target, "estimate": "None", "weights": self.model.parameters(), "data": data}
+        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}
 #        forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
 #        values = {key: value for key,value in values.items() if key in forward_signature}
         #if self.counterfactual:
@@ -210,7 +211,7 @@ class LightningClassifier(L.LightningModule):
         self.val_target += target.tolist()
         self.val_output += output.tolist()
         self.val_loss += [val_loss.item()]   
-    
+        self.val_estimate += estimate.tolist()
 
 #        for name in old_params:
 #            if not torch.equal(old_params[name], new_params[name].data):
