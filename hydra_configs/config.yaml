@@ -6,11 +6,11 @@ defaults:
   - logger: wandb
   - data: water
   - trainer: trainer_default
-  - optimizer: sgd
+  - optimizer: adam
   - estimator: dice
   - preprocessor: preprocessing
 
-run_mode: run #sweep      
+run_mode: sweep #run sweep      
 project: counterfactual_overfitting_experiments_new
 name: experiments
 version: 1

@@ -92,7 +92,7 @@ def dice_single_cf_batch(
 
 def dice_cf_set_batch(
     model, x, logits,
-    K=3, lambda_proximity=0.1, gamma_diversity=0.1,
+    K=1, lambda_proximity=0.1, gamma_diversity=0.1,
     num_steps=500, lr=0.01,
     loss_type='hinge', prox_type='l1', mad=None
 ):

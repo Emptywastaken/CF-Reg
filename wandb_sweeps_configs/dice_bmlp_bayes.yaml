@@ -1,0 +1,23 @@
+method: bayes
+name: WATER_BMLP_DICE_Bayes
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.alpha:  # `alpha` nested under `loss`
+    distribution: uniform
+    min: 0.0000001
+    max: 1.0
+  estimator.lambda_proximity:  # `lambda_proximity` nested under `estimator`
+    distribution: uniform
+    min: 0.001
+    max: 1.0
+  model:
+    values:
+      - {model_type: BMLP, hidden_layers: [100,30], dropout: 0.0, single_output: True}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}
+early_terminate:
+  type: hyperband
+  max_iter: 150
