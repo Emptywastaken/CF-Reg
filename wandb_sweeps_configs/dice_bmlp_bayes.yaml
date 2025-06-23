@@ -1,5 +1,5 @@
 method: bayes
-name: WATER_BMLP_DICE_Bayes
+name: WATER_BMLP_DICE4_Bayes
 metric:
   goal: maximize
   name: validation/accuracy

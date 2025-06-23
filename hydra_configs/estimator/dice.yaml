@@ -1,5 +1,5 @@
 type: dice
-K: 1
+K: 4
 lambda_proximity: 0.1
 gamma_diversity: 0.1
 num_steps: 500

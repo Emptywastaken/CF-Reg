@@ -152,7 +152,7 @@ if __name__ == "__main__":
     # get 3 CF sets using hinge + MAD prox
     cfs = dice_cf_set_batch(
         model, x, y,
-        K=1,
+        K=4,
         loss_type='hinge', prox_type='mad', mad=mad
     )
     for i, z in enumerate(cfs, 1):
