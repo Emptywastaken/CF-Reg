@@ -1,13 +1,13 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: scfe_regularization
+  - loss: normal
   - model: bmlp    # mlp - water or cnn - cifar10
   - logger: wandb
   - data: water
   - trainer: trainer_default
-  - optimizer: adam
-  - estimator: dice
+  - optimizer: sgd
+  - estimator: scfe
   - preprocessor: preprocessing
 
 run_mode: sweep #run sweep      

@@ -1,5 +1,5 @@
 method: bayes
-name: Phomene_BigBMLP_L2_Bayes
+name: WATER_BMLP_L2_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
@@ -7,10 +7,10 @@ parameters:
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
     min: 0.0000001
-    max: 0.1
+    max: 1.0
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [150,1000,150,30], dropout: 0.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [100,30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

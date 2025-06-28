@@ -1,5 +1,5 @@
 method: bayes
-name: Water_BMLP_Dropout_Bayes
+name: WATER_BMLP_Dropout_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
@@ -7,3 +7,6 @@ parameters:
   model.dropout:
     min: 0.0001
     max: 0.9
+  model:
+    values:
+      - {model_type: BMLP, hidden_layers: [100,30], single_output: True}

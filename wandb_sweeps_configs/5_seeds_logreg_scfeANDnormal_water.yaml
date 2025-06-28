@@ -1,25 +1,29 @@
 method: grid
-name: 15_WATER_LogReg_SCFE_L2
+name: 15_WATER_LogReg_Normal
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
+      - 37
+      - 38
+      - 39
+      - 40
+      - 41
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
       - 47
       - 48
       - 49
       - 50
       - 51
-      - 52
-      - 53
-      - 54
-      - 55
-      - 56
   loss:
     values:
-      - {type: scfe_regularization, alpha: -0.3791284419743485}
-      - {type: l2normal, alpha: 0.6927660031848177}
+      - {type: normal, alpha: 0.05}
   model:
     values:
       - {model_type: LogisticRegression}

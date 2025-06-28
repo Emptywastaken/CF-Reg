@@ -1,5 +1,5 @@
 method: grid
-name: 5_WATER_BMLP_DROPOUT
+name: 15_WATER_BMLP_DROPOUT
 metric:
   goal: maximize
   name: validation/accuracy

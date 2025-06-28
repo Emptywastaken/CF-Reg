@@ -1,5 +1,5 @@
 method: grid
-name: 15_WATER_LogReg_L2
+name: 15_WATER_LogReg_EarlyStopping
 metric:
   goal: maximize
   name: validation/accuracy
@@ -23,10 +23,13 @@ parameters:
       - 51
   loss:
     values:
-      - {type: l2normal, alpha: 0.6927660031848177}
+      - {type: normal, alpha: 0.05}
   model:
     values:
       - {model_type: LogisticRegression}
+  trainer.callbacks:
+    values:
+      - {early_stop_enable: True, patience: 20}
   preprocessor:
     values:
       - {poly_features_degree: 6, resample: 1}
