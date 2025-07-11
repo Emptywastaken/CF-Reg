@@ -1,5 +1,5 @@
 method: grid
-name: 15_WATER_LogReg_Normal
+name: 15_PHOMENE_LogReg_SCFE
 metric:
   goal: maximize
   name: validation/accuracy
@@ -23,10 +23,13 @@ parameters:
       - 51
   loss:
     values:
-      - {type: normal, alpha: 0.05}
+      - {type: scfe_regularization, alpha: -0.00463}
+  estimator.reg_coef:
+    values:
+      - {rc_type: 'by_value', value: 0.31792}
   model:
     values:
       - {model_type: LogisticRegression}
   preprocessor:
     values:
-      - {poly_features_degree: 6, resample: 1}
+      - {poly_features_degree: 11, resample: 1}

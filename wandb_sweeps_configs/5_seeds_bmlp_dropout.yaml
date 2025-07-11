@@ -1,25 +1,35 @@
 method: grid
-name: 15_WATER_BMLP_DROPOUT
+name: 15_PHOMENE_BMLP_DROPOUT
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
+      - 37
+      - 38
+      - 39
+      - 40
+      - 41
       - 42
       - 43
       - 44
       - 45
       - 46
+      - 47
+      - 48
+      - 49
+      - 50
+      - 51
   loss:
     values:
       - {type: normal, alpha: 0.0005}
-  estimator:
+  estimator.reg_coef:
     values:
-      - {reg_coef: 0.1}
+      - {rc_type: 'by_value', value: 2.3732909181719206}
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.00023364396947601115, single_output: True}
+      - {model_type: BMLP, hidden_layers: [100, 40], dropout: 0.03663, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

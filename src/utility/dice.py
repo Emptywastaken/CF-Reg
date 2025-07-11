@@ -6,7 +6,7 @@ def dice_single_cf_batch(
     lambda_proximity=0.1, gamma_diversity=0.0,
     prev_zs=None, num_steps=500, lr=0.01,
     loss_type='hinge',  # 'hinge' or 'bce'
-    prox_type='l1',     # 'l1' or 'mad'
+    prox_type='mad',     # 'l1' or 'mad'
     mad=None            # 1D tensor of shape (D,) if prox_type=='mad'
 ):
     """
@@ -94,7 +94,7 @@ def dice_cf_set_batch(
     model, x, logits,
     K=1, lambda_proximity=0.1, gamma_diversity=0.1,
     num_steps=500, lr=0.01,
-    loss_type='hinge', prox_type='l1', mad=None
+    loss_type='hinge', prox_type='mad', mad=None
 ):
     """
     Greedy generation of K counterfactual batches with configurable losses.

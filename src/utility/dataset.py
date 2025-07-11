@@ -393,6 +393,31 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         
         return train_set, test_set
 
+    elif name == "higgs_reduced":
+        try:
+            df = pd.read_csv('data/higgs_reduced.csv')
+        except Exception:
+            raise ValueError(f"Higgs dataset is not inside the data folder! cwd {os.getcwd()}")
+        
+        # Convert 'signal' from bytes to int (if necessary)
+        df['signal'] = df['signal'].apply(lambda x: int(x.decode('utf-8')) if isinstance(x, bytes) else int(x))
+        
+        X_train, X_test, y_train, y_test = preprocess(df, preprocess_config, 'signal')
+
+        train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train, dtype=dtype_out))
+        test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
+        
+        #Print some data information
+        labels = test_set.tensors[1]
+        unique_classes, counts = torch.unique(labels, return_counts=True)
+        total_samples = len(labels)
+        proportions = counts / total_samples
+
+        for cls, count, prop in zip(unique_classes, counts, proportions):
+            print(f"Class {cls.item()}: Count = {count.item()}, Proportion = {prop.item():.2%}")
+
+        return train_set, test_set
+
     else:
         
         raise ValueError(f"Dataset {name} is not available!")
