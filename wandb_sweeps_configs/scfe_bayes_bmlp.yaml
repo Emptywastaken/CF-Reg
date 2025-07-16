@@ -1,5 +1,5 @@
 method: bayes
-name: Higgs_BMLP_SCFE_Bayes
+name: Higgs_BigBMLP_SCFE_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
@@ -10,11 +10,11 @@ parameters:
     max: -0.0000001
   estimator.reg_coef.value:  # `reg_coef` nested under `estimator`
     distribution: uniform
-    min: 0.01
+    min: 0.001
     max: 2.5
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [150, 1000,150,30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

@@ -1,0 +1,16 @@
+method: grid
+name:   Higgs_BigBMLP_Optim
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  optimizer:
+    values:
+      - { name: adam}
+      - { name: sgd}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}
+  model:
+    values:
+     - {model_type: BMLP, hidden_layers: [150, 1000,150,30] , dropout: 0.0, single_output: True}

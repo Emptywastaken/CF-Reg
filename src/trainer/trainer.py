@@ -1,3 +1,4 @@
+from typing import List
 import torch
 from src.estimator import Estimator
 import pytorch_lightning as L
@@ -39,6 +40,7 @@ class LightningClassifier(L.LightningModule):
         self.counterfactual = counterfactual
         self.show_embedding = False
         self.margin = margin
+        self.all_train_margins: List[List[float]] = []
         
         if self.show_embedding:
             self.model.layers[-2].register_forward_hook(extract_embeddings_hook)
@@ -91,10 +93,14 @@ class LightningClassifier(L.LightningModule):
         if self.margin:
             log_data.update({f"{stage}/avgmargin" : np.mean(self.train_margin),
             f"{stage}/avgevcpbound": evcp_bound})
+            # **NEW**: store a copy of this epoch’s estimates
+            self.all_train_margins.append(self.train_margin.copy())
 
         log_data.update(estimator_log_data)
 
-        self.log_dict(log_data, on_epoch=True, on_step=False) 
+        self.log_dict(log_data, on_epoch=True, on_step=False)
+
+ 
         
         
     def training_step(self, batch: torch.Tensor, batch_idx: int) -> torch.Tensor:
@@ -153,6 +159,14 @@ class LightningClassifier(L.LightningModule):
             plt.close()
         return loss
     
+    def on_train_end(self) -> None:
+        # Dump the full list-of-lists to a pickle
+        if self.margin:
+            import pickle
+            filename = "all_train_margins" + str(self.estimator.radius) + ".pkl"
+            with open(filename , "wb") as f:
+                pickle.dump(self.all_train_margins, f)
+    
     def on_validation_epoch_start(self) -> None:
         self.val_t_start = time.time_ns()
         self.val_output = []
@@ -184,6 +198,8 @@ class LightningClassifier(L.LightningModule):
             log_data.update(estimator_log_data)
 
             self.log_dict(log_data, on_epoch=True, on_step=False) 
+
+
 
     def validation_step(self, batch, batch_idx):
         

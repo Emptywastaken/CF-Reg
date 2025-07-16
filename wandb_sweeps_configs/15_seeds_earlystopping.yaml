@@ -1,5 +1,5 @@
 method: grid
-name: 15_WATER_LogReg_EarlyStopping
+name: 15_PHOMENE_BigBMLP_EarlyStopping
 metric:
   goal: maximize
   name: validation/accuracy
@@ -26,10 +26,11 @@ parameters:
       - {type: normal, alpha: 0.05}
   model:
     values:
-      - {model_type: LogisticRegression}
+  #    - {model_type: LogisticRegression}
+      - {model_type: BMLP, hidden_layers: [150, 1000,150, 30], dropout: 0.0, single_output: True}
   trainer.callbacks:
     values:
-      - {early_stop_enable: True, patience: 20}
-  preprocessor:
-    values:
-      - {poly_features_degree: 6, resample: 1}
+      - {early_stop_enable: True, patience: 280}
+#  preprocessor:
+#    values:
+#      - {poly_features_degree: 1, resample: 1}

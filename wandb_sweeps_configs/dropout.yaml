@@ -1,5 +1,5 @@
 method: bayes
-name: Higgs_BMLP_Dropout_Bayes
+name: Higgs_BigBMLP_Dropout_Bayes
 metric:
   goal: maximize
   name: validation/accuracy
@@ -9,4 +9,4 @@ parameters:
     max: 0.9
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [100, 30], single_output: True}
+      - {model_type: BMLP, hidden_layers: [150, 1000,150,30], single_output: True}

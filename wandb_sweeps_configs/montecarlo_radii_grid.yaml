@@ -1,0 +1,21 @@
+method: grid
+name: WATER_LogReg_Montecarl_Radii_Grid
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  estimator:
+    values:
+      - {radius: 5}
+      - {radius: 10}
+      - {radius: 20}
+      - {radius: 35}
+      - {radius: 50}
+      - {radius: 75}
+      - {radius: 100}
+  model:
+    values:
+      - {model_type: LogisticRegression}
+  preprocessor:
+    values:
+      - {poly_features_degree: 6, resample: 1}

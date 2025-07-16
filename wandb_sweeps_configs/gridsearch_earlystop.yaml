@@ -1,5 +1,5 @@
 method: grid
-name:   Higgs_BMLP_Earlystop_SEARCH_5_300
+name:   Higgs_BigBMLP_Earlystop_SEARCH_5_180
 metric:
   goal: maximize
   name: validation/accuracy
@@ -30,15 +30,15 @@ parameters:
       - {early_stop_enable: True, patience: 140}
       - {early_stop_enable: True, patience: 160}
       - {early_stop_enable: True, patience: 180}
-      - {early_stop_enable: True, patience: 200}
-      - {early_stop_enable: True, patience: 220}
-      - {early_stop_enable: True, patience: 240}
-      - {early_stop_enable: True, patience: 260}
-      - {early_stop_enable: True, patience: 280}
-      - {early_stop_enable: True, patience: 300}
+#      - {early_stop_enable: True, patience: 200}
+#      - {early_stop_enable: True, patience: 220}
+#      - {early_stop_enable: True, patience: 240}
+#      - {early_stop_enable: True, patience: 260}
+#      - {early_stop_enable: True, patience: 280}
+#      - {early_stop_enable: True, patience: 300}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}
   model:
     values:
-     - {model_type: BMLP, hidden_layers: [100, 30] , dropout: 0.0, single_output: True}
+     - {model_type: BMLP, hidden_layers: [150, 1000,150,30] , dropout: 0.0, single_output: True}
