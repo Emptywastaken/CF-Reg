@@ -1,32 +1,22 @@
 method: grid
-name: 15_PHOMENE_LogReg_SCFE
+name: 5_Phomene_LogReg_SCFE_Adam_1
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 37
-      - 38
-      - 39
-      - 40
-      - 41
       - 42
       - 43
       - 44
       - 45
       - 46
-      - 47
-      - 48
-      - 49
-      - 50
-      - 51
   loss:
     values:
-      - {type: scfe_regularization, alpha: -0.00463}
+      - {type: scfe_regularization, alpha: -1.847013051568084e-06}
   estimator.reg_coef:
     values:
-      - {rc_type: 'by_value', value: 0.31792}
+      - {rc_type: 'by_value', value: 0.10410208792932552}
   model:
     values:
       - {model_type: LogisticRegression}

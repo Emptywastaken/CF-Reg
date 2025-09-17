@@ -1,29 +1,19 @@
 method: grid
-name: 15_PHOMENE_LogReg_L2
+name: 5_Phomene_LogReg_L2_Adam
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 37
-      - 38
-      - 39
-      - 40
-      - 41
       - 42
       - 43
       - 44
       - 45
       - 46
-      - 47
-      - 48
-      - 49
-      - 50
-      - 51
   loss:
     values:
-      - {type: l2normal, alpha: 0.001556}
+      - {type: l2normal, alpha: 0.03659229015761808}
   model:
     values:
       - {model_type: LogisticRegression}

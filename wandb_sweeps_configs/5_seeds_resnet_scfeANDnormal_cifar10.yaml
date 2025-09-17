@@ -1,25 +1,24 @@
 method: grid
-name: 15_CIFAR10_RESNET_SCFE_L2
+name: 5_CIFAR10_RESNET_Normal_Adam
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 47
-      - 48
-      - 49
-      - 50
-      - 51
-      - 52
-      - 53
-      - 54
-      - 55
-      - 56
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+
   loss:
     values:
-      - {type: scfe_regularization, alpha: -0.301813994900475}
-      - {type: l2normal, alpha: 0.08646921925589064}
+  #    - {type: scfe_regularization, alpha: -0.0007245560018479785}
+      - {type: normal, alpha: 0.08646921925589064}
+  estimator.reg_coef:
+    values:
+      - {rc_type: 'by_value', value: 0.1851922898765324}
   model:
     values:
       - {model_type: BPreActResNet}

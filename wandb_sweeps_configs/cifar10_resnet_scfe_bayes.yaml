@@ -1,19 +1,17 @@
 method: bayes
-name: CIFAR10_ResNet_SCFE_Bayes
+name: CIFAR10_ResNet_SCFE_Bayes_adam_low_alpha
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  loss.aggr_func.type: 
-    values:
-      - tp_tn_mean
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
-    min: -1.0
-    max: -0.000001
-  estimator.reg_coef:  # `reg_coef` nested under `estimator`
-    values:
-      - {rc_type: 'optim'}
+    min: -0.001
+    max: -0.00000001
+  estimator.reg_coef.value:  # `reg_coef` nested under `estimator`
+    distribution: uniform
+    min: 0.00001
+    max: 0.8
   model:
     values:
       - {model_type: BPreActResNet}

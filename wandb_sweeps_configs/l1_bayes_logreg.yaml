@@ -1,5 +1,5 @@
 method: bayes
-name: IONO_LogReg_L1_Bayes
+name: Phomene_LogReg_L1_Bayes_Adam
 metric:
   goal: maximize
   name: validation/accuracy
@@ -13,7 +13,7 @@ parameters:
       - {model_type: LogisticRegression}
   preprocessor:
     values:
-      - {poly_features_degree: 2, resample: 1}
+      - {poly_features_degree: 11, resample: 1}
 early_terminate:
   type: hyperband
   max_iter: 150

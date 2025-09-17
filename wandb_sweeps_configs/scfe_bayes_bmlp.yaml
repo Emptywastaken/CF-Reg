@@ -1,20 +1,22 @@
 method: bayes
-name: Higgs_BigBMLP_SCFE_Bayes
+name: Water_BMLP_SCFE_Bayes_Adam_Alto
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   loss.alpha:  # `alpha` nested under `loss`
     distribution: uniform
-    min: -2.0
+    min: -1.0
     max: -0.0000001
   estimator.reg_coef.value:  # `reg_coef` nested under `estimator`
     distribution: uniform
-    min: 0.001
+    min: 0.5
     max: 2.5
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [150, 1000,150,30], dropout: 0.0, single_output: True}
+    - {model_type: BMLP, hidden_layers: [100,30], dropout: 0.0, single_output: True}
+  #  - {model_type: BMLP, hidden_layers: [100,40], dropout: 0.0, single_output: True}
+  #   - {model_type: BMLP, hidden_layers: [150,1000,150,30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

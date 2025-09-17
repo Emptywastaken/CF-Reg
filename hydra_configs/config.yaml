@@ -1,10 +1,10 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: normal 
+  - loss: scfe_regularization
   - model: bmlp    # mlp - water or cnn - cifar10
   - logger: wandb
-  - data: higgs_reduced
+  - data: water
   - trainer: trainer_default
   - optimizer: adam
   - estimator: scfe

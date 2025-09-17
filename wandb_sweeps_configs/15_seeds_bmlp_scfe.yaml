@@ -1,37 +1,28 @@
 method: grid
-name: 15_PHOMENE_BigBMLP_scfe
+name: 5_Phomene_BMLP_scfe_Adam_8
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 37
-      - 38
-      - 39
-      - 40
-      - 41
       - 42
       - 43
       - 44
       - 45
       - 46
-      - 47
-      - 48
-      - 49
-      - 50
-      - 51
   loss:
     values:
-      - {type: scfe_regularization, alpha: -0.08494}
+      - {type: scfe_regularization, alpha: -0.023849561620946313}
 #      - {type: normal, alpha: 0.0005}
 #      - {type: scfe_regularization, alpha: -0.6816607573884588}
   estimator.reg_coef:
     values:
-      - {rc_type: 'by_value', value: 2.39}
+      - {rc_type: 'by_value', value: 1.6907491399955734}
   model:
     values:
-     - {model_type: BMLP, hidden_layers: [150, 1000,150, 30], dropout: 0.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [100, 40], dropout: 0.0, single_output: True}
+  #    - {model_type: BMLP, hidden_layers: [150,1000,150, 30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

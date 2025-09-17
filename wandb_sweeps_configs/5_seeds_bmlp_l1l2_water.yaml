@@ -1,32 +1,23 @@
 method: grid
-name: 15_PHOMENE_BigBMLP_L2
+name: 5_Higgs_BigBMLP_L2_Adam
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
   seed:
     values:
-      - 37
-      - 38
-      - 39
-      - 40
-      - 41
       - 42
       - 43
       - 44
       - 45
       - 46
-      - 47
-      - 48
-      - 49
-      - 50
-      - 51
   loss:
     values:
-      - {type: l2normal, alpha: 0.000077}
+      - {type: l2normal, alpha: 0.000167481262329331}
   model:
     values:
-      - {model_type: BMLP, hidden_layers: [150, 1000,150, 30], dropout: 0.0, single_output: True}
+    #  - {model_type: BMLP, hidden_layers: [100, 30], dropout: 0.0, single_output: True}
+      - {model_type: BMLP, hidden_layers: [150,1000,150, 30], dropout: 0.0, single_output: True}
   preprocessor:
     values:
       - {poly_features_degree: 1, resample: 1}

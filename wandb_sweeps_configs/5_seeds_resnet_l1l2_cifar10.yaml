@@ -1,5 +1,5 @@
 method: grid
-name: 5_CIFAR10_RESNET_L1L2
+name: 5_CIFAR10_RESNET_L2_Adam
 metric:
   goal: maximize
   name: validation/accuracy
@@ -13,11 +13,8 @@ parameters:
       - 46
   loss:
     values:
-      - {type: l1normal, alpha: 0.004983743336878859}
-      - {type: l2normal, alpha: 0.08646921925589064}
-  estimator:
-    values:
-      - {reg_coef: 0.1}
+    #  - {type: l1normal, alpha: 8.700108629408394e-06}
+      - {type: l2normal, alpha: 4.868347556254324e-06}
   model:
     values:
       - {model_type: BPreActResNet}
