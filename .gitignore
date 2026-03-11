@@ -9,3 +9,5 @@ lightning_logs
 imgs
 .*png
 data/*
+design_output/*
+temp/*

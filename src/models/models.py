@@ -92,6 +92,13 @@ class BMLP(nn.Module):
         
         return x
 
+    def get_last_layer_weight(self):
+        """
+        Retrieves the weight matrix of the final linear layer.
+        Added to support Latent Space Counterfactual Estimation without breaking encapsulation.
+        """
+        return self.layers[-1].weight
+
     def linearize(self, x: torch.Tensor):
         """
         Computes the first-order Taylor expansion of the MLP for each element in a batch.
@@ -165,6 +172,13 @@ class MLP(nn.Module):
             x = F.softmax(x, dim=-1)
         
         return x
+
+    def get_last_layer_weight(self):
+        """
+        Retrieves the weight matrix of the final linear layer.
+        Added to support Latent Space Counterfactual Estimation without breaking encapsulation.
+        """
+        return self.layers[-1].weight
 
     def linearize(self, x: torch.Tensor):
         """

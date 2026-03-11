@@ -1,0 +1,19 @@
+method: bayes
+name: Temp_Latent_SCFE_Alpha_Sweep
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.alpha:  # `alpha` nested under `loss`
+    distribution: uniform
+    min: -1.0
+    max: -0.0000001
+  model:
+    values:
+    - {model_type: BMLP, hidden_layers: [100,30], dropout: 0.0, single_output: True}
+  preprocessor:
+    values:
+      - {poly_features_degree: 1, resample: 1}
+early_terminate:
+  type: hyperband
+  max_iter: 150

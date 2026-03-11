@@ -122,12 +122,6 @@ class LightningClassifier(L.LightningModule):
 
         torch.set_grad_enabled(mode=True)
         loss = self.criterion(**values)       
-        #print("batch_idx:", batch_idx)
-        #for name, param in self.model.named_parameters():
-        #    if param.grad is not None:
-        #        print(f"{name}: {param.grad.norm()}")
-        #    else:
-        #        print(f"{name}: No gradient found")
       
         self.train_target += target.tolist()
         self.train_output += output.tolist()

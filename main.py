@@ -35,7 +35,7 @@ def set_run_name(cfg, run):
 
     run_name: str = f"{cfg.model.model_type}_{cfg.data.name}_{cfg.loss.type}_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     run.name = run_name
-    run.save()
+    run.save("config.yaml")
 
 def is_counterfactual(cfg):
     

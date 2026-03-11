@@ -7,10 +7,10 @@ defaults:
   - data: water
   - trainer: trainer_default
   - optimizer: adam
-  - estimator: scfe
+  - estimator: latent_scfe
   - preprocessor: preprocessing
 
-run_mode: sweep #run        
+run_mode: run #sweep or run        
 project: counterfactual_overfitting_experiments_new
 name: experiments
 version: 1
