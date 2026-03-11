@@ -1,0 +1,2 @@
+type: latent_scfe
+reg_coef: {rc_type: 'by_value', value: 1.0}
