@@ -131,7 +131,7 @@ class LightningClassifier(L.LightningModule):
         if self.margin:
             torch.set_grad_enabled(mode=False)
             w = self.model.linear.weight.cpu()
-            f_x = self.model.forward(data).cpu()
+            f_x = self.model.forward(data).cpu() #danylo: this may not be optimal in terms of speed
             #print("f_x.shape:", f_x.shape)
             #print("w.shape:", w.shape)
             margin = np.abs(f_x/np.linalg.norm(w))
@@ -194,7 +194,7 @@ class LightningClassifier(L.LightningModule):
             self.log_dict(log_data, on_epoch=True, on_step=False) 
 
 
-
+    
     def validation_step(self, batch, batch_idx):
         
   
@@ -205,10 +205,10 @@ class LightningClassifier(L.LightningModule):
         #p_x = self.estimator.get_estimate(out=out, target=target_cf)
    
 #        old_params = {name: param.clone() for name, param in self.model.named_parameters()}
-        torch.set_grad_enabled(mode=True)
+        # torch.set_grad_enabled(mode=True) # not needed since explanations are useless in latent space
         estimate = self.estimator.get_estimate(data = data, output = output)
    
-        torch.set_grad_enabled(mode=False)
+        # torch.set_grad_enabled(mode=False)
         #  new_params = {name: param for name, param in self.model.named_parameters()}
 
         values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}

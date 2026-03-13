@@ -123,7 +123,18 @@ def get_dataset(**kwargs) -> Tuple[TensorDataset, TensorDataset]:
         train_set = TensorDataset(torch.tensor(X_train, dtype=dtype_in), torch.tensor(y_train,dtype=dtype_out))
         test_set = TensorDataset(torch.tensor(X_test, dtype=dtype_in), torch.tensor(y_test, dtype=dtype_out))
         
+
+        labels = test_set.tensors[1]
+        unique_classes, counts = torch.unique(labels, return_counts=True)
+        total_samples = len(labels)
+        proportions = counts / total_samples
+
+        for cls, count, prop in zip(unique_classes, counts, proportions):
+            print(f"Class {cls.item()}: Count = {count.item()}, Proportion = {prop.item():.2%}")
+        
         return train_set, test_set
+
+        
     
     elif name == "mnist":
         from torchvision import datasets

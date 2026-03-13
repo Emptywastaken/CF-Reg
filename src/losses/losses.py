@@ -143,6 +143,57 @@ class L2CrossEntropy(Module):
         l2_reg = sum(param.pow(2).sum() for param in weights)
         return train_loss + self.alpha * l2_reg
     
+# temp regterm = 1/distance + e #issue: 1/x^2 <- derivative 
+class SCFEInverseRegularizationLoss(Module):
+    def __init__(self, **kwargs) -> None:
+        super().__init__()
+        
+        # NOTE: alpha must be POSITIVE! 
+        self.alpha : float = kwargs['alpha']
+        
+        # Epsilon is CRITICAL here to prevent division by zero 
+        # if a data point lands exactly on the decision boundary.
+        self.epsilon : float = kwargs.get('epsilon', 1e-6) 
+        
+        self.binary : bool = kwargs['binary']
+        if self.binary: 
+            self.train_loss = torch.nn.functional.binary_cross_entropy_with_logits
+        else:
+            self.train_loss = torch.nn.functional.cross_entropy
+            
+        self.aggr_function = get_aggr_func(**kwargs)
+
+    def forward(self, **kwargs):
+        """ input : model's predictions
+            target: true classes
+        """
+        input : torch.Tensor = kwargs['input']
+        target : torch.Tensor = kwargs['target']
+
+        assert input.shape[0] == target.shape[0], "Batch size mismatch"
+        if self.binary:
+            assert input.dim() == 1, "Input must be of shape [N C]"
+        else:
+            assert input.dim() == 2, "Input must be of shape [N C]"
+            
+        # 1. Calculate Standard Cross-Entropy Loss
+        train_loss = self.train_loss(input, target)
+        
+        # 2. Get the raw CF-Reg distance from your aggregation function
+        distance = self.aggr_function(**kwargs)
+        
+        # 3. Apply the Inverse Penalty (Magnetic Repulsion)
+        # As distance approaches 0, this fraction explodes, punishing the model.
+        # As distance grows large, this fraction shrinks towards 0.
+        penalty = 1.0 / (distance + self.epsilon)
+        
+        # Average the penalty if your aggregation function returns a vector
+        if penalty.dim() > 0:
+            penalty = penalty.mean()
+            
+        # 4. Add the penalty to the total loss
+        return train_loss + (self.alpha * penalty)
+
 class CrossEntropy(Module):
     def __init__(self, **kwargs) -> None:
         super().__init__()

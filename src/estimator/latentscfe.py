@@ -9,7 +9,7 @@ class LatentSCFEEstimator(Estimator):
     """
     def __init__(self, function: torch.nn.Module, **kwargs):
         self.function = function
-        self.reg_coef = kwargs.get('reg_coef')
+        self.epsilon = kwargs.get('epsilon', 0.0)
         self.w_norm_history = []
 
     def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
@@ -37,9 +37,10 @@ class LatentSCFEEstimator(Estimator):
         # Finally, the distance to the counterfactual is just the absolute output divided by the weight's norm
         # Reverting to the geometric normalized distance but adding a stabilization constant (epsilon).
         # This explicitly stops the model from shrinking w_norm infinitesimally close to 0 to blow up the distance.
-        epsilon = 1e-3
-        distance = torch.abs(output) / (w_norm + epsilon)
+       
+        distance = torch.abs(output) / (w_norm + self.epsilon)
         
+
         return distance
 
     def get_estimate_name(self) -> str:
