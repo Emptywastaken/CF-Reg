@@ -24,6 +24,13 @@ def get_model(**kwargs) -> torch.nn.Module:
 
         return model.to(device)
     
+    elif model_type == "BMLPBatch":
+        from src.models.models import BMLPBatch
+        config['input_dim'] = config['input_dim'][1]
+        model = BMLPBatch(**config)
+
+        return model.to(device)
+    
     elif model_type == "CNN":
         from src.models.models import CNN
         config['input_dim'] = config['input_dim'][2]

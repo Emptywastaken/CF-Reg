@@ -1,0 +1,3 @@
+model_type: BMLPBatch
+hidden_layers: [100, 30]
+dropout: 0.0

@@ -1,8 +1,8 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: scfe_inverse_regularization
-  - model: bmlp    # mlp - water or cnn - cifar10
+  - loss: scfe_regularization
+  - model: bmlpbatch
   - logger: wandb
   - data: water
   - trainer: trainer_default
@@ -10,7 +10,7 @@ defaults:
   - estimator: latent_scfe
   - preprocessor: preprocessing
 
-run_mode: run #sweep or run        
+run_mode: sweep #sweep or run        
 project: counterfactual_overfitting_experiments_new
 name: experiments
 version: 1
