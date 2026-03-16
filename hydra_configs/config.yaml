@@ -2,7 +2,7 @@ defaults:
   - _self_
   - loader: loader
   - loss: scfe_regularization
-  - model: bmlpbatch
+  - model: bmlp
   - logger: wandb
   - data: water
   - trainer: trainer_default

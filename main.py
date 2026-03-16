@@ -33,7 +33,28 @@ def set_run_name(cfg, run):
     
     from datetime import datetime
 
-    run_name: str = f"{cfg.model.model_type}_{cfg.data.name}_{cfg.loss.type}_{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    parts = [
+        str(cfg.model.model_type),
+        str(cfg.data.name),
+        str(cfg.loss.type)
+    ]
+    
+    # Add alpha if present in loss config
+    if 'alpha' in cfg.loss:
+        parts.append(f"a{cfg.loss.alpha}")
+        
+    # Add epsilon if present in estimator or loss config
+    epsilon = cfg.estimator.get('epsilon')
+    if epsilon is None:
+        epsilon = cfg.loss.get('epsilon')
+    
+    if epsilon is not None:
+        parts.append(f"eps{epsilon}")
+
+    # Add timestamp
+    parts.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+    
+    run_name: str = "_".join(parts)
     run.name = run_name
     run.save("config.yaml")
 

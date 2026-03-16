@@ -10,8 +10,7 @@ class LatentSCFEEstimator(Estimator):
     def __init__(self, function: torch.nn.Module, **kwargs):
         self.function = function
         self.epsilon = kwargs.get('epsilon', 0.0)
-        self.w_norm_history = []
-
+      
     def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
         """
         Finds the distance to the closest counterfactual, which in this latent space is:
@@ -32,14 +31,13 @@ class LatentSCFEEstimator(Estimator):
         # By default, torch.norm with p=2 will compute the Frobenius norm over all dimensions 
         # of the tensor efficiently at the C++ level without needing us to explicitly specify dimensions.
         w_norm = torch.norm(w, p=2)  
-        self.w_norm_history.append(w_norm.item())
+
         
         # Finally, the distance to the counterfactual is just the absolute output divided by the weight's norm
         # Reverting to the geometric normalized distance but adding a stabilization constant (epsilon).
         # This explicitly stops the model from shrinking w_norm infinitesimally close to 0 to blow up the distance.
        
         distance = torch.abs(output) / (w_norm + self.epsilon)
-        
 
         return distance
 
@@ -51,7 +49,7 @@ class LatentSCFEEstimator(Estimator):
 
         if not values:
             return {}
-            
+
         max_value = max(values)
         mean_value = np.mean(values)
         first_quartile = np.percentile(values, 25)
@@ -68,8 +66,10 @@ class LatentSCFEEstimator(Estimator):
             f"{stage}/min latent_distance": min_value,
         }
         
-        if hasattr(self, 'w_norm_history') and self.w_norm_history:
-            log_data[f"{stage}/w_norm"] = np.mean(self.w_norm_history)
-            self.w_norm_history.clear()
+        
+        with torch.no_grad():
+            w = self.function.get_last_layer_weight()
+            current_w_norm = torch.norm(w, p=2).item()
+            log_data[f"{stage}/w_norm"] = current_w_norm
 
         return log_data

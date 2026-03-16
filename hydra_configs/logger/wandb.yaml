@@ -2,4 +2,4 @@
 name: ${name}
 project: ${project}
 mode: online
-config: bmlp_batch_grid_sweep
+config: bmlp_grid_sweep

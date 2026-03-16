@@ -3,6 +3,7 @@ from torch import nn, Tensor
 import torch.nn.functional as F
 from typing import *
 from src.utility.geometric import Sphere
+from src.utility.models import apply_custom_norm_init 
 seed = 42
 
 
@@ -63,18 +64,25 @@ class BMLP(nn.Module):
         super(BMLP, self).__init__()
         self.layers = nn.ModuleList()
         self.use_dropout = kwargs["dropout"] > 0.0
-        self.apply_softmax = kwargs.get("apply_softmax", False)  # Optional parameter
+        self.apply_softmax = kwargs.get("apply_softmax", False)
         
-        # Create the first layer from the input dimension to the first hidden layer size
         current_dim = kwargs["input_dim"]
+        
         for hidden_dim in kwargs["hidden_layers"]:
-            self.layers.append(nn.Linear(current_dim, hidden_dim))
+            new_linear = nn.Linear(current_dim, hidden_dim)
+            self.layers.append(new_linear)
+            
             if self.use_dropout:
                 self.layers.append(nn.Dropout(kwargs["dropout"]))
             current_dim = hidden_dim
         
         # Output layer
         self.layers.append(nn.Linear(current_dim, 1))
+
+        # Apply the custom initialization to the FINAL OUTPUT LAYER
+        expected_norm = kwargs.get("expected_norm_output", None)
+        if expected_norm is not None:
+            apply_custom_norm_init(self.layers[-1], expected_norm)
 
     def forward(self, x: torch.Tensor):
         # Apply a ReLU activation function and dropout (if used) to each hidden layer

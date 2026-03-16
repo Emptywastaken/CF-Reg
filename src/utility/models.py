@@ -1,5 +1,19 @@
+import math
 import torch
+import torch.nn as nn
 
+def apply_custom_norm_init(module: nn.Module, expected_norm: float):
+    """
+    Applies a uniform initialization to a linear layer to guarantee 
+    a specific expected L2 norm for its weights.
+    """
+    if isinstance(module, nn.Linear):
+        d = module.weight.size(1) # Number of input features
+        a = expected_norm * math.sqrt(3.0 / d)
+        
+        # Apply the mathematically bounded uniform distribution
+        with torch.no_grad():
+            nn.init.uniform_(module.weight, a=-a, b=a)
 
 def get_model(**kwargs) -> torch.nn.Module:
     
