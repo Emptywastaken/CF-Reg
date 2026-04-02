@@ -1,4 +1,4 @@
 model_type: BMLP
 hidden_layers: [100, 30] #change to [100, 30] for the latent space run
 dropout: 0.0
-expected_norm_output: 1.0
+expected_norm_output: null #null for default initialization

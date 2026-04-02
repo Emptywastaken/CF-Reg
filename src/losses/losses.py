@@ -143,7 +143,7 @@ class L2CrossEntropy(Module):
         l2_reg = sum(param.pow(2).sum() for param in weights)
         return train_loss + self.alpha * l2_reg
     
-# temp regterm = 1/distance + e #issue: 1/x^2 <- derivative 
+# regterm = 1/distance + e #issue: 1/x^2 <- derivative 
 class SCFEInverseRegularizationLoss(Module):
     def __init__(self, **kwargs) -> None:
         super().__init__()
@@ -151,8 +151,6 @@ class SCFEInverseRegularizationLoss(Module):
         # NOTE: alpha must be POSITIVE! 
         self.alpha : float = kwargs['alpha']
         
-        # Epsilon is CRITICAL here to prevent division by zero 
-        # if a data point lands exactly on the decision boundary.
         self.epsilon : float = kwargs.get('epsilon', 1e-6) 
         
         self.binary : bool = kwargs['binary']

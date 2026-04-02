@@ -1,4 +1,4 @@
-from ..estimator import Estimator, SCFEEstimator, MontecarloEstimator, DiceEstimator, LatentSCFEEstimator
+from ..estimator import Estimator, SCFEEstimator, MontecarloEstimator, DiceEstimator, LatentSCFEEstimator, LatentSCFEEstimatorDetached
 
 def get_estimator(**kwargs) -> Estimator:
     type : str = kwargs.pop("type")
@@ -11,5 +11,7 @@ def get_estimator(**kwargs) -> Estimator:
         return DiceEstimator(function=kwargs.pop("function"), **kwargs)
     elif type == "latent_scfe":
         return LatentSCFEEstimator(function=kwargs.pop("function"), **kwargs)
+    elif type == "latent_scfe_detached":
+        return LatentSCFEEstimatorDetached(function=kwargs.pop("function"), **kwargs)
     else:
         raise ValueError(f"This estimator has not been implemented yet!")

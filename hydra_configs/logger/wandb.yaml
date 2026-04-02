@@ -1,5 +1,4 @@
-
 name: ${name}
 project: ${project}
 mode: online
-config: bmlp_grid_sweep
+config: scfe_resnet_sweep

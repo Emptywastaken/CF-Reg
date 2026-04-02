@@ -385,7 +385,7 @@ class PreActBlock(nn.Module):
         out += shortcut
         return out
 
-class BPreActResNet(nn.Module):
+class BPreActResNet(nn.Module): # resnet18
     def __init__(self, block, num_blocks, num_classes=10):
         super(BPreActResNet, self).__init__()
         self.in_planes = 64
@@ -416,6 +416,14 @@ class BPreActResNet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out).squeeze(1)
         return out
+
+    def get_last_layer_weight(self):
+        """
+        Retrieves the weight matrix of the final linear layer.
+        Added to support Latent Space Counterfactual Estimation without breaking encapsulation.
+        """
+        return self.linear.weight
+
     
     def linearize(self, x: torch.Tensor):
         """

@@ -73,3 +73,72 @@ class LatentSCFEEstimator(Estimator):
             log_data[f"{stage}/w_norm"] = current_w_norm
 
         return log_data
+
+class LatentSCFEEstimatorDetached(Estimator):
+    """
+    Estimator that calculates the margin distance to the linear decision boundary
+    in the latent space (i.e. the last hidden layer before the linear classification head).
+    """
+    def __init__(self, function: torch.nn.Module, **kwargs):
+        self.function = function
+        # Epsilon acts as a safety net to prevent division by absolute zero
+        self.epsilon = kwargs.get('epsilon', 0.0)
+      
+    def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
+        """
+        Finds the distance to the closest counterfactual, which in this latent space is:
+        abs((w^T z + b) / ||w||_2)
+        
+        Args:
+            data (Tensor): Original input batch (not used explicitly here since output avoids re-forwarding).
+            output (Tensor): Raw logits / linear output from the model. 
+                             Corresponds exactly to w^T z + b.
+
+        Returns:
+            Tensor: A batch of latent space distances.
+        """
+        # 1. Get the weight matrix for the model's final classification layer
+        w = self.function.get_last_layer_weight()
+        
+        # 2. Calculate the L2 norm AND DETACH IT
+        # 🟢 THE FIX: .detach() completely blinds the optimizer to the denominator.
+        # It can no longer calculate gradients to shrink the norm to cheat the distance.
+        w_norm = torch.norm(w, p=2).detach()  
+
+        # 3. Calculate the honest distance
+        distance = torch.abs(output) / (w_norm + self.epsilon)
+
+        return distance
+
+    def get_estimate_name(self) -> str:
+        return "latent_scfe_detached"
+
+    def build_log(self, values: list, stage: str) -> dict:
+        import numpy as np
+
+        if not values:
+            return {}
+
+        max_value = max(values)
+        mean_value = np.mean(values)
+        first_quartile = np.percentile(values, 25)
+        third_quartile = np.percentile(values, 75)
+        median_value = np.median(values)
+        min_value = min(values)
+
+        log_data = {
+            f"{stage}/max latent_distance": max_value,
+            f"{stage}/mean latent_distance": mean_value,
+            f"{stage}/first_quartile latent_distance": first_quartile,
+            f"{stage}/third_quartile latent_distance": third_quartile,
+            f"{stage}/median latent_distance": median_value,
+            f"{stage}/min latent_distance": min_value,
+        }
+        
+        
+        with torch.no_grad():
+            w = self.function.get_last_layer_weight()
+            current_w_norm = torch.norm(w, p=2).item()
+            log_data[f"{stage}/w_norm"] = current_w_norm
+
+        return log_data 

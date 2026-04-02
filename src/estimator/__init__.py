@@ -2,4 +2,4 @@ from .estimator import Estimator
 from .montecarlo import MontecarloEstimator
 from .scfe import SCFEEstimator
 from .diceestimator import DiceEstimator
-from .latentscfe import LatentSCFEEstimator
+from .latentscfe import LatentSCFEEstimator, LatentSCFEEstimatorDetached
