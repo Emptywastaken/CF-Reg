@@ -1,0 +1,19 @@
+method: bayes
+name: BPreActResNet_SCFE_Bayes_Sweep
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.alpha:
+    distribution: uniform
+    min: -1.0
+    max: -0.000001
+  estimator.epsilon:
+    distribution: uniform
+    min: 0.0001
+    max: 2.0
+  trainer.max_epochs:
+    values: [200]
+early_terminate:
+  type: hyperband
+  max_iter: 150

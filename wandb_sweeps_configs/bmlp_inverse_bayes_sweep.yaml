@@ -1,0 +1,19 @@
+method: bayes
+name: BMLP_SCFE_Inverse_Bayes_Sweep
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  # The only CF-Reg parameter we are sweeping now is the master volume knob!
+  loss.alpha:
+    distribution: log_uniform_values
+    min: 0.01
+    max: 2.0
+    
+  # Standard architecture parameters (optional, but good for Bayes)
+  model.model_type:
+    values: ["BMLP"]
+  loss.type:
+    values: ["scfe_inverse_regularization"]
+  estimator.type:
+    values: ["latent_scfe"]

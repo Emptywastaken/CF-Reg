@@ -1,0 +1,20 @@
+method: bayes
+name: Inverse_Loss_Bayes_Sweep_Default_Estimator
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.epsilon:
+    distribution: uniform
+    min: 0.07
+    max: 0.6
+  loss.type:
+    values: ["scfe_inverse_regularization"]
+  estimator.type:
+    values: ["latent_scfe"]
+  model.model_type:
+    values: ["BMLP"]
+  trainer.max_epochs:
+    values: [4000]
+  seed:
+    values: [42]
