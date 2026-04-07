@@ -146,7 +146,8 @@ def main(cfg: DictConfig) -> None:
         print("Proect: ", cfg.logger.project)
         sweep_config = read_yaml(f'wandb_sweeps_configs/{cfg.logger.config}.yaml')
         sweep_id = wandb.sweep(sweep=sweep_config, project=cfg.logger.project)
-        wandb.agent(sweep_id=sweep_id, function=train)
+        count = cfg.sweep_count if 'sweep_count' in cfg else None
+        wandb.agent(sweep_id=sweep_id, function=train, count=count)
         
     elif cfg.run_mode == "run":
         

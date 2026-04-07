@@ -1,0 +1,22 @@
+method: bayes
+name: Water_BMLP_Large_SCFE_Bayes
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.alpha:
+    distribution: uniform
+    min: -1.0
+    max: -0.0000001
+  estimator.epsilon:
+    distribution: uniform
+    min: 0.0001
+    max: 2.0
+  trainer.max_epochs:
+    values: [1000]
+  model:
+    values:
+    - {model_type: BMLP, hidden_layers: [150, 1000, 150, 30], dropout: 0.0, single_output: True}
+early_terminate:
+  type: hyperband
+  max_iter: 150
