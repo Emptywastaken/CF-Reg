@@ -1,0 +1,23 @@
+method: grid
+name: 5_Seeds_ResNet_SCFE_Optimal
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.type:
+    values: ["scfe_regularization"]
+  loss.alpha:
+    values: [-0.4659596993637739]
+  estimator.type:
+    values: ["latent_scfe"]
+  estimator.epsilon:
+    values: [1.3571619130427588]
+  seed:
+    values:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+  trainer.max_epochs:
+    values: [1000]
