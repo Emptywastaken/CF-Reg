@@ -23,7 +23,7 @@ class Estimator(ABC):
         pass
 
     @abstractmethod
-    def get_estimate(self, data: Tensor, output: Tensor) -> Tensor:
+    def get_estimate(self, data: Tensor, output: Tensor, target: Tensor = None) -> Tensor:
         """
         Abstract method to build a tensor of norms of the difference between each sample in data and its counterfactual example.
         Subclasses must implement this method.

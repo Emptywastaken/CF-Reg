@@ -113,7 +113,7 @@ class LightningClassifier(L.LightningModule):
         #if self.counterfactual:
         #    values = values | { "out_cf": out, "target_cf": target_cf}
 
-        estimate = self.estimator.get_estimate(data = data, output = output)
+        estimate = self.estimator.get_estimate(data = data, output = output, target=target)
         values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}
 
         #forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
@@ -206,7 +206,7 @@ class LightningClassifier(L.LightningModule):
    
 #        old_params = {name: param.clone() for name, param in self.model.named_parameters()}
         # torch.set_grad_enabled(mode=True) # not needed since explanations are useless in latent space
-        estimate = self.estimator.get_estimate(data = data, output = output)
+        estimate = self.estimator.get_estimate(data = data, output = output, target=target)
    
         # torch.set_grad_enabled(mode=False)
         #  new_params = {name: param for name, param in self.model.named_parameters()}

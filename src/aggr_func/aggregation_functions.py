@@ -61,7 +61,6 @@ class TP_TN_mean(Module):
     def __init__(self, **kwargs):
         super().__init__()
 
-    
     def forward(self, **kwargs):
         output: torch.Tensor = kwargs.pop("input")  # Model output, named "input" in loss signature
         target: torch.Tensor = kwargs.pop("target")
@@ -69,14 +68,16 @@ class TP_TN_mean(Module):
         
         torch.set_grad_enabled(False)
         
-        # Compute mask efficiently
-        mask = ((output < 0) & (target == 0)) | ((output >= 0) & (target == 1))
-        mask = mask.float()  # Convert to float tensor for weighting
+        if output.dim() == 1:
+            predicted = (output >= 0).long()
+        else:
+            predicted = torch.argmax(output, dim=1)
+            
+        # Compute mask efficiently (1 if correct, 0 if wrong)
+        mask = (predicted == target).float()
         torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.sum().clamp(min=1)  # Avoid division by zero
-        
-        
         
         return weighted_mean
             
@@ -91,13 +92,16 @@ class FP_FN_mean(Module):
         
         torch.set_grad_enabled(False)
         
-        # Compute mask with 0 or -1
-        mask = -((output < 0) & (target == 1) | (output >= 0) & (target == 0)).float()
+        if output.dim() == 1:
+            predicted = (output >= 0).long()
+        else:
+            predicted = torch.argmax(output, dim=1)
+            
+        # Compute mask with 0 or -1 (-1 if wrong, 0 if correct)
+        mask = -((predicted != target).float())
         torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.abs().sum().clamp(min=1)  # Avoid division by zero
-        
-        
         
         return weighted_mean
     
@@ -112,12 +116,15 @@ class Supervised_mean(Module):
         
         torch.set_grad_enabled(False)
         
-        # Compute mask with 1 or -1
-        mask = 2 * (((output < 0) & (target == 0)) | ((output >= 0) & (target == 1))).float() - 1
+        if output.dim() == 1:
+            predicted = (output >= 0).long()
+        else:
+            predicted = torch.argmax(output, dim=1)
+            
+        # Compute mask with 1 or -1 (1 if correct, -1 if wrong)
+        mask = 2 * (predicted == target).float() - 1
         torch.set_grad_enabled(True)
         # Compute the weighted mean of estimate
         weighted_mean = (estimate * mask).sum() / mask.abs().sum().clamp(min=1)  # Avoid division by zero
-        
-        
         
         return weighted_mean

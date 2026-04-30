@@ -1,19 +1,19 @@
 defaults:
-  - _self_
   - loader: loader
-  - loss: scfe_regularization
-  - model: bpreactresnet
+  - loss: scfe_regularization_multiclass
+  - model: preactresnet
   - logger: wandb
   - data: cifar10
   - trainer: trainer_default
   - optimizer: adam
   - estimator: latent_scfe
   - preprocessor: preprocessing
+  - _self_
 
 # This line ensures the logger uses the correct sweep configuration file
 # from the wandb_sweeps_configs directory.
 logger:
-  config: 5_seeds_resnet_scfe_optimal
+  config: cifar10_multiclass_resnet_scfe
 
 run_mode: sweep #sweep or run        
 project: counterfactual_overfitting_experiments_new

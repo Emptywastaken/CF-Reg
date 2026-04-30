@@ -79,6 +79,12 @@ def get_model(**kwargs) -> torch.nn.Module:
         model = BPreActResNet(PreActBlock, [2,2,2,2], num_classes=1)
 
         return model.to(device)
+    
+    elif model_type == "PreActResNet":
+        from src.models.models import PreActResNet, PreActBlock
+        model = PreActResNet(PreActBlock, [2,2,2,2], num_classes=config["nclasses"])
+
+        return model.to(device)
     else:
         
         raise ValueError(f"{model_type} is not a valide model type!")
