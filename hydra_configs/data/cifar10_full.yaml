@@ -1,0 +1,5 @@
+name: cifar10
+nclasses: 10
+input_dim: [32, 32]
+channel_in: 3
+make_binary: False # Make sure to set this to False for full CIFAR-10
