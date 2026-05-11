@@ -1,0 +1,20 @@
+method: grid
+name: CIFAR10_Multiclass_ResNet_SCFE
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.type:
+    values: ["scfe_regularization"]
+  loss.alpha:
+    values: [-1e-5,-1e-4,-0.001, -0.01, -0.1, -1.0]
+  loss.binary:
+    values: [False]
+  model.model_type:
+    values: ["PreActResNet"]
+  data.make_binary:
+    values: [False]
+  seed:
+    values: [42]
+  trainer.max_epochs:
+    values: [200]

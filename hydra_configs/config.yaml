@@ -1,6 +1,6 @@
 defaults:
   - loader: loader
-  - loss: scfe_regularization_multiclass
+  - loss: scfe_regularization
   - model: preactresnet
   - logger: wandb
   - data: cifar10

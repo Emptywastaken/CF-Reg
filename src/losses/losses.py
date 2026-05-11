@@ -76,6 +76,11 @@ class SCFERegularizationLoss(Module):
         #assert estimate.dim() == 1, "Estimate must be 1D"
         #print("input.dtype: ", input.dtype)
         #print("target.dtype: ", target.dtype)
+        if self.binary:
+            target = target.float()
+        else:
+            target = target.long()
+            
         train_loss = self.train_loss(input, target)
         reg_term = self.aggr_function(**kwargs)
         return train_loss + self.alpha * reg_term
@@ -108,6 +113,11 @@ class L1CrossEntropy(Module):
         else:
             assert input.dim() == 2, "Input must be of shape [N C]"
 
+        if self.binary:
+            target = target.float()
+        else:
+            target = target.long()
+            
         train_loss = self.train_loss(input, target)
         l1_reg = sum(param.abs().sum() for param in weights)
         train_loss += self.alpha * l1_reg
@@ -139,6 +149,11 @@ class L2CrossEntropy(Module):
         else:
             assert input.dim() == 2, "Input must be of shape [N C]"
 
+        if self.binary:
+            target = target.float()
+        else:
+            target = target.long()
+            
         train_loss = self.train_loss(input, target)
         l2_reg = sum(param.pow(2).sum() for param in weights)
         return train_loss + self.alpha * l2_reg
@@ -174,6 +189,11 @@ class SCFEInverseRegularizationLoss(Module):
         else:
             assert input.dim() == 2, "Input must be of shape [N C]"
             
+        if self.binary:
+            target = target.float()
+        else:
+            target = target.long()
+            
         # 1. Calculate Standard Cross-Entropy Loss
         train_loss = self.train_loss(input, target)
         
@@ -208,5 +228,11 @@ class CrossEntropy(Module):
         """
         input : torch.Tensor = kwargs['input']
         target : torch.Tensor = kwargs['target']
+        
+        if self.binary:
+            target = target.float()
+        else:
+            target = target.long()
+            
         return self.train_loss(input, target)
     

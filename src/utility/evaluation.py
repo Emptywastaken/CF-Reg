@@ -11,13 +11,25 @@ class ClassifierEvaluator:
         self.f1 = F1Score(task="multiclass", num_classes=classes).to(self.device)
         self.precision = Precision(task="multiclass", average='macro', num_classes=classes).to(self.device)
         self.recall = Recall(task="multiclass", average='macro', num_classes=classes).to(self.device)
-        self.crossentropy = torch.nn.functional.binary_cross_entropy_with_logits
+        
+        if classes > 2:
+            self.crossentropy = torch.nn.functional.cross_entropy
+        else:
+            self.crossentropy = torch.nn.functional.binary_cross_entropy_with_logits
         
     
     def get_complete_evaluation(self, output, target):
         
         output = torch.tensor(output, device=self.device)
         target = torch.tensor(target, device=self.device)
+
+        if self.crossentropy == torch.nn.functional.binary_cross_entropy_with_logits:
+            if target.dim() == 1:
+                target = target.view(-1, 1).float()
+            else:
+                target = target.float()
+        else:
+            target = target.long()
 
         crossentropy = self.crossentropy(output, target)
         
