@@ -3,7 +3,7 @@ from torch.nn import Module
 from ..estimator import MontecarloEstimator
 
 def get_aggr_func(**kwargs):
-    aggr_func = kwargs.pop('aggr_func') #dict
+    aggr_func = kwargs.pop('aggr_func', {'type': 'mean'}) #dict
     type = aggr_func['type']
     if type == "mean":
         print("Aggregation Function: mean")
