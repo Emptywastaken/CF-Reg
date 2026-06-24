@@ -1,2 +1,2 @@
 type: normal
-binary: True #Use [True] when the target vector is 1D otherwise use [False] 
+binary: False #Use [True] when the target vector is 1D otherwise use [False] 

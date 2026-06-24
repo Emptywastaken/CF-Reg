@@ -499,7 +499,6 @@ class PreActResNet(nn.Module): # resnet18 multiclass
     def get_last_layer_weight(self):
         """
         Retrieves the weight matrix of the final linear layer.
-        Added to support Latent Space Counterfactual Estimation without breaking encapsulation.
         """
         return self.linear.weight
 

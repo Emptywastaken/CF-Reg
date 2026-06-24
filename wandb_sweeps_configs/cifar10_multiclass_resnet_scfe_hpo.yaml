@@ -1,0 +1,22 @@
+method: bayes
+name: CIFAR10_Multiclass_ResNet_SCFE_HPO
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.type:
+    value: "scfe_regularization"
+  loss.alpha:
+    distribution: uniform
+    min: -0.001
+    max: 0.0
+  loss.binary:
+    value: False
+  model.model_type:
+    value: "PreActResNet"
+  data.make_binary:
+    value: False
+  seed:
+    value: 42
+  trainer.max_epochs:
+    value: 200
