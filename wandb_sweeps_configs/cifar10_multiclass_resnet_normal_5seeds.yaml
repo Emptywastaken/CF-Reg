@@ -1,0 +1,18 @@
+method: grid
+name: CIFAR10_Multiclass_ResNet_Normal_5Seeds
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.type:
+    values: ["normal"]
+  loss.binary:
+    values: [False]
+  model.model_type:
+    values: ["PreActResNet"]
+  data.make_binary:
+    values: [False]
+  seed:
+    values: [42, 43, 44, 45, 46]
+  trainer.max_epochs:
+    values: [200]
