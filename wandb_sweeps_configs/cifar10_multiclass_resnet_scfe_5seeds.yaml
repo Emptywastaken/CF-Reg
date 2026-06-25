@@ -4,17 +4,22 @@ metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  loss.type:
-    values: ["scfe_regularization"]
-  loss.alpha:
-    values: [-1.0966156860342264e-05]
-  loss.binary:
-    values: [False]
-  model.model_type:
-    values: ["PreActResNet"]
-  data.make_binary:
-    values: [False]
   seed:
-    values: [42, 43, 44, 45, 46]
-  trainer.max_epochs:
-    values: [200]
+    values:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+  loss:
+    values:
+      - {type: scfe_regularization, alpha: -1.0966156860342264e-05, binary: False}
+  model:
+    values:
+      - {model_type: PreActResNet}
+  data:
+    values:
+      - {make_binary: False}
+  trainer:
+    values:
+      - {max_epochs: 200}
