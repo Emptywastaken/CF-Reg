@@ -114,7 +114,7 @@ class LightningClassifier(L.LightningModule):
         #    values = values | { "out_cf": out, "target_cf": target_cf}
 
         estimate = self.estimator.get_estimate(data = data, output = output, target=target)
-        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}
+        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data, "current_step": self.current_epoch, "num_steps": self.trainer.max_epochs}
 
         #forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
         #values = {key: value for key,value in values.items() if key in forward_signature}
@@ -211,7 +211,7 @@ class LightningClassifier(L.LightningModule):
         # torch.set_grad_enabled(mode=False)
         #  new_params = {name: param for name, param in self.model.named_parameters()}
 
-        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data}
+        values: dict = {"input": output, "target": target, "estimate": estimate, "weights": self.model.parameters(), "data": data, "current_step": self.current_epoch, "num_steps": self.trainer.max_epochs}
 #        forward_signature = list(inspect.signature(self.criterion.__class__.forward).parameters.keys())[1:] # the first parameter is self, so it can be dropped
 #        values = {key: value for key,value in values.items() if key in forward_signature}
         #if self.counterfactual:

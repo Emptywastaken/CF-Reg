@@ -1,0 +1,8 @@
+defaults:
+  - aggr_func: mean
+
+type: scfe_dynamic_regularization
+initial_alpha: -0.0
+final_alpha: -0.2
+binary: False #Use [True] when the target vector is 1D otherwise use [False] 
+warmup_steps: 0

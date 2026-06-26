@@ -85,6 +85,65 @@ class SCFERegularizationLoss(Module):
         reg_term = self.aggr_function(**kwargs)
         return train_loss + self.alpha * reg_term
     
+class DynamicSCFERegularizationLoss(Module):
+    def __init__(self, initial_alpha: float, final_alpha: float, binary: bool, warmup_steps: int = 0, **kwargs) -> None:
+        super().__init__()
+        self.initial_alpha = initial_alpha
+        self.final_alpha = final_alpha
+        self.binary = binary
+        
+        # New parameter: Number of steps to wait before ramping alpha
+        self.warmup_steps = warmup_steps
+        
+        # Initialize the aggregation function using any extra kwargs
+        self.aggr_function = get_aggr_func(**kwargs)
+
+    def forward(self, input: torch.Tensor, target: torch.Tensor, current_step: int = 0, num_steps: int = 1, **kwargs):
+        """
+        input: model's predictions (logits)
+        target: true classes
+        current_step: current batch step or epoch
+        num_steps: total steps or epochs
+        """
+        
+        # 1. Delayed Warm-up Alpha Interpolation
+        if current_step < self.warmup_steps:
+            # Phase 1: Pure baseline training (alpha remains at initial)
+            alpha = self.initial_alpha
+        else:
+            # Phase 2: Active interpolation over the remaining steps
+            active_step = current_step - self.warmup_steps
+            active_total = num_steps - self.warmup_steps
+            
+            if active_total > 0:
+                # min(1.0) strictly bounds the alpha from exceeding final_alpha
+                progress = min(1.0, active_step / active_total)
+                alpha = self.initial_alpha + progress * (self.final_alpha - self.initial_alpha)
+            else:
+                alpha = self.final_alpha
+
+        # 2. Shape and Type Safety
+        assert input.shape[0] == target.shape[0], f"Batch size mismatch: {input.shape[0]} vs {target.shape[0]}"
+        
+        if self.binary:
+            train_loss = torch.nn.functional.binary_cross_entropy_with_logits(input.squeeze(), target.float().squeeze())
+        else:
+            assert input.dim() == 2, "Multiclass input must be of shape [N, C]"
+            train_loss = torch.nn.functional.cross_entropy(input, target.long())
+            
+        # 3. Regularization Term
+        reg_term = self.aggr_function(input=input, target=target, current_step=current_step, num_steps=num_steps, **kwargs)
+        
+        # Explicit consistency check: Ensure reg_term is a scalar
+        if reg_term.dim() != 0:
+            reg_term = reg_term.mean()
+
+        # 4. Total Loss
+        # NOTE: Using addition (+) because alpha is passed as a negative value in the config
+        return train_loss + (alpha * reg_term)
+
+
+    
 
 class L1CrossEntropy(Module):
     def __init__(self, **kwargs) -> None:
