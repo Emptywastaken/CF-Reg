@@ -1,4 +1,4 @@
 model_type: BMLP
-hidden_layers: [150, 1000, 150, 30] # bmlp large
+hidden_layers: [100, 30] # bmlp small
 dropout: 0.0
 expected_norm_output: null #null for default initialization

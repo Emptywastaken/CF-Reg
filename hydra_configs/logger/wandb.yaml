@@ -1,4 +1,4 @@
 name: ${name}
 project: ${project}
 mode: online
-config: water_bmlp_large_scfe_bayes
+config: 5_seeds_time
