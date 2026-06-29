@@ -1,4 +1,4 @@
 name: ${name}
 project: ${project}
 mode: online
-config: water_bmlp_large_scfe_bayes
+config: cifar10_multiclass_resnet_scfe_dynamic_hpo

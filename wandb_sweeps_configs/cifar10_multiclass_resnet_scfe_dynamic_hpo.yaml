@@ -1,0 +1,28 @@
+method: bayes
+name: CIFAR10_Multiclass_ResNet_SCFE_Dynamic_HPO
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  loss.type:
+    value: "scfe_dynamic_regularization"
+  loss.initial_alpha:
+    value: -0.0
+  loss.final_alpha:
+    distribution: uniform
+    min: -0.5
+    max: 0.0
+  loss.binary:
+    value: False
+  loss.warmup_steps:
+    distribution: int_uniform
+    min: 0
+    max: 40000
+  model.model_type:
+    value: "PreActResNet"
+  data.make_binary:
+    value: False
+  seed:
+    value: 42
+  trainer.max_epochs:
+    value: 200
