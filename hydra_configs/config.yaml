@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - loader: loader
-  - loss: normal
+  - loss: scfe_dynamic_regularization
   - model: preactresnet
   - logger: wandb
   - data: cifar10
