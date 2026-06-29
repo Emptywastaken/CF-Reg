@@ -7,17 +7,17 @@ parameters:
   loss.type:
     value: "scfe_dynamic_regularization"
   loss.initial_alpha:
-    value: -0.0
+    value: 0.0
   loss.final_alpha:
     distribution: uniform
-    min: -0.5
-    max: 0.0
+    min: -1e-2
+    max: 0
   loss.binary:
     value: False
   loss.warmup_steps:
     distribution: int_uniform
     min: 0
-    max: 200
+    max: 100
   model.model_type:
     value: "PreActResNet"
   data.make_binary:
