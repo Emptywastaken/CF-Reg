@@ -1,3 +1,3 @@
 type: latent_scfe
 reg_coef: {rc_type: 'by_value', value: 1.0}
-epslon: 0.0
+epsilon: 1e-4

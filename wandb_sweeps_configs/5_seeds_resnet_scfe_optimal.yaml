@@ -20,4 +20,4 @@ parameters:
       - 45
       - 46
   trainer.max_epochs:
-    values: [1000]
+    values: [200]

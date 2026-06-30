@@ -60,7 +60,8 @@ class LatentSCFEEstimator(Estimator):
             # 4. Compute the denominator: ||w_true - w_k|| for all classes
             # Broadcasting [batch_size, 1, latent_dim] - [1, num_classes, latent_dim]
             w_diff = w_true.unsqueeze(1) - weights.unsqueeze(0)
-            w_diff_norm = torch.norm(w_diff, p=2, dim=2) # shape: [batch_size, num_classes]
+            # Use torch.sqrt(sum(sq) + 1e-8) to avoid NaN gradients at exactly 0 when w_diff is the true class difference
+            w_diff_norm = torch.sqrt(torch.sum(w_diff ** 2, dim=2) + 1e-8) # shape: [batch_size, num_classes]
 
             # 5. Calculate full geometric distance
             distances = logit_diff / (w_diff_norm + self.epsilon)
