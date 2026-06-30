@@ -1,0 +1,21 @@
+method: grid
+name: 5_Seeds_BPreActResNet_Normal_CIFAR10
+metric:
+  goal: maximize
+  name: validation/accuracy
+parameters:
+  data:
+    values: ["cifar10"]
+  model:
+    values: ["bpreactresnet"]
+  loss:
+    values: ["normal"]
+  seed:
+    values:
+      - 42
+      - 43
+      - 44
+      - 45
+      - 46
+  trainer.max_epochs:
+    values: [200]

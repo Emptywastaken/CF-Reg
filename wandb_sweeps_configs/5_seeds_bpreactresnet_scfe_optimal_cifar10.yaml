@@ -1,17 +1,21 @@
 method: grid
-name: 5_Seeds_ResNet_SCFE_Optimal
+name: 5_Seeds_BPreActResNet_SCFE_Optimal_CIFAR10
 metric:
   goal: maximize
   name: validation/accuracy
 parameters:
-  loss.type:
+  data:
+    values: ["cifar10"]
+  model:
+    values: ["bpreactresnet"]
+  loss:
     values: ["scfe_regularization"]
   loss.alpha:
-    values: [-0.4659596993637739]
-  estimator.type:
+    values: [-0.4859035615152224]
+  estimator:
     values: ["latent_scfe"]
   estimator.epsilon:
-    values: [1.3571619130427588]
+    values: [1.228249903769895]
   seed:
     values:
       - 42
