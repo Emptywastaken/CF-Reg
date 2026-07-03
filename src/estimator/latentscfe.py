@@ -107,4 +107,10 @@ class LatentSCFEEstimator(Estimator):
             current_w_norm = torch.norm(w, p=2).item()
             log_data[f"{stage}/w_norm"] = current_w_norm
 
+            if w.shape[0] > 1:   # multiclass: track the actual pairwise denominator
+                wd = w.unsqueeze(1) - w.unsqueeze(0)
+                norms = torch.sqrt((wd ** 2).sum(-1) + 1e-8)
+                norms.fill_diagonal_(float("inf"))
+                log_data[f"{stage}/min_pairwise_w_norm"] = norms.min().item()
+
         return log_data
