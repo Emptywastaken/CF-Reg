@@ -50,7 +50,7 @@ def build_val_loader(name):
     }
     
     _, testset = get_dataset(name=base_name, binary=binary, preprocess_config=preprocess_config)
-    return DataLoader(testset, batch_size=256, shuffle=False)
+    return DataLoader(testset, batch_size=128, shuffle=False)
 
 def make_model(num_classes):
     cls = BPreActResNet if num_classes == 1 else PreActResNet
@@ -65,14 +65,14 @@ CONFIG = {
         "num_classes": 1,          # single logit head
         "epsilon": 0.4696,         # Make sure this matches what you used in training
         # Update these paths to match your server's run structure!
-        "baseline": sorted(glob.glob("lightning_logs/*cifar10_binary*baseline*/checkpoints/*.ckpt")),
-        "cfreg":    sorted(glob.glob("lightning_logs/*cifar10_binary*cfreg*/checkpoints/*.ckpt")),
+        "baseline": sorted(glob.glob("logs/**/*baseline*/**/*.ckpt", recursive=True)) + sorted(glob.glob("counterfactual_overfitting_experiments_new/**/*baseline*/**/*.ckpt", recursive=True)),
+        "cfreg":    sorted(glob.glob("logs/**/*cfreg*/**/*.ckpt", recursive=True)) + sorted(glob.glob("counterfactual_overfitting_experiments_new/**/*cfreg*/**/*.ckpt", recursive=True)),
     },
     "cifar10_multi": {
         "num_classes": 10,         
         "epsilon": 1e-4,           # Set this to the epsilon used for multiclass
-        "baseline": sorted(glob.glob("lightning_logs/*cifar10_multi*baseline*/checkpoints/*.ckpt")),
-        "cfreg":    sorted(glob.glob("lightning_logs/*cifar10_multi*cfreg*/checkpoints/*.ckpt")),
+        "baseline": sorted(glob.glob("logs/**/*baseline*/**/*.ckpt", recursive=True)) + sorted(glob.glob("counterfactual_overfitting_experiments_new/**/*baseline*/**/*.ckpt", recursive=True)),
+        "cfreg":    sorted(glob.glob("logs/**/*cfreg*/**/*.ckpt", recursive=True)) + sorted(glob.glob("counterfactual_overfitting_experiments_new/**/*cfreg*/**/*.ckpt", recursive=True)),
     },
 }
 

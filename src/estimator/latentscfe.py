@@ -101,7 +101,6 @@ class LatentSCFEEstimator(Estimator):
             f"{stage}/min latent_distance": min_value,
         }
         
-        
         with torch.no_grad():
             w = self.function.get_last_layer_weight()
             current_w_norm = torch.norm(w, p=2).item()
@@ -112,5 +111,9 @@ class LatentSCFEEstimator(Estimator):
                 norms = torch.sqrt((wd ** 2).sum(-1) + 1e-8)
                 norms.fill_diagonal_(float("inf"))
                 log_data[f"{stage}/min_pairwise_w_norm"] = norms.min().item()
+
+            # Track BN gamma norm if the model has a explicit 'bn' attribute (like ResNets)
+            if hasattr(self.function, 'bn') and self.function.bn is not None:
+                log_data[f"{stage}/final_bn_gamma_norm"] = self.function.bn.weight.norm().item()
 
         return log_data
